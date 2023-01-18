@@ -39,7 +39,7 @@ void loop()
   static int8_t step = 1;
   if (bright == 0)
     step = 1;
-  if (bright == 120)
+  if (bright == 360)
     step = -1;
 
   uint16_t c = matrix.color565(bright, bright, bright);
@@ -49,7 +49,7 @@ void loop()
   bright += step;
 
   uint8_t sat = abs(bright - 60);
-
+  uint16_t exp = pow(2, bright);
   //matrix.writeLine(0, bright, 64, bright, matrix.color565(bright*8, 255-bright*8, 0));
 
   constexpr uint8_t center = 15;
@@ -61,46 +61,46 @@ void loop()
 
   Serial.println(sat);
   
-  matrix.writeLine(col0, center-6, col1, center-12, matrix.colorHSV(bright*hsv_convert, 192 + sat, bright));
-  matrix.writeLine(col0, center-6, col1, center, matrix.colorHSV(120*hsv_convert, 255, 255));
-  matrix.writeLine(col0, center-6, col1, center+12, matrix.colorHSV(240*hsv_convert, 255, 255));
+  matrix.writeLine(col0, center-6, col1, center-12, matrix.colorHSV(355*hsv_convert, 255, 255));
+  matrix.writeLine(col0, center-6, col1, center, matrix.colorHSV(125*hsv_convert, 255, 64));
+  matrix.writeLine(col0, center-6, col1, center+12, matrix.colorHSV(125*hsv_convert, 255, 255));
 
-  matrix.writeLine(col0, center+6, col1, center-12, matrix.color565(128, 64, 64));
-  matrix.writeLine(col0, center+6, col1, center, luminance(bright));
-  matrix.writeLine(col0, center+6, col1, center+12, luminance(bright));
+  matrix.writeLine(col0, center+6, col1, center-12, matrix.colorHSV(125*hsv_convert, 255, 64));
+  matrix.writeLine(col0, center+6, col1, center, matrix.colorHSV(355*hsv_convert, 255, 64));
+  matrix.writeLine(col0, center+6, col1, center+12, matrix.colorHSV(355*hsv_convert, 255, 8));
 
 
-  matrix.writeLine(col1, center-12, col2, center-12, matrix.color565(bright, 255-bright, 50));
-  matrix.writeLine(col1, center-12, col2, center, matrix.color565(255-bright, bright, 50));
-  matrix.writeLine(col1, center-12, col2, center+12, matrix.color565(255, 50, 20));
+  matrix.writeLine(col1, center-12, col2, center-12, matrix.colorHSV(355*hsv_convert, 255, 128));
+  matrix.writeLine(col1, center-12, col2, center, matrix.colorHSV(125*hsv_convert, 255, 64));
+  matrix.writeLine(col1, center-12, col2, center+12, matrix.colorHSV(125*hsv_convert, 255, 8));
 
-  matrix.writeLine(col1, center, col2, center-12, matrix.color565(255-bright, bright, 50));
-  matrix.writeLine(col1, center, col2, center, matrix.color565(128, 128, 20));
-  matrix.writeLine(col1, center, col2, center+12, matrix.color565(bright, 255-bright, 50));
+  matrix.writeLine(col1, center, col2, center-12, matrix.colorHSV(125*hsv_convert, 255, 8));
+  matrix.writeLine(col1, center, col2, center, matrix.colorHSV(355*hsv_convert, 255, 64));
+  matrix.writeLine(col1, center, col2, center+12, matrix.colorHSV(355*hsv_convert, 255, 255));
   
-  matrix.writeLine(col1, center+12, col2, center-12, matrix.color565(8, 8, 8));
-  matrix.writeLine(col1, center+12, col2, center, matrix.color565(128, 128, 128));
-  matrix.writeLine(col1, center+12, col2, center+12, matrix.color565(50, 50, 50));
+  matrix.writeLine(col1, center+12, col2, center-12, matrix.colorHSV(125*hsv_convert, 255, 255));
+  matrix.writeLine(col1, center+12, col2, center, matrix.colorHSV(355*hsv_convert, 255, 8));
+  matrix.writeLine(col1, center+12, col2, center+12, matrix.colorHSV(125*hsv_convert, 255, 8));
 
 
-  matrix.writeLine(col2, center-12, col3, center, matrix.color565(8, 8, 8));
-  matrix.writeLine(col2, center, col3, center, matrix.color565(128, 128, 128));
-  matrix.writeLine(col2, center+12, col3, center, matrix.color565(50, 50, 50));
+  matrix.writeLine(col2, center-12, col3, center, matrix.colorHSV(355*hsv_convert, 255, 32));
+  matrix.writeLine(col2, center, col3, center, matrix.colorHSV(125*hsv_convert, 255, 8));
+  matrix.writeLine(col2, center+12, col3, center, matrix.colorHSV(355*hsv_convert, 255, 255));
 
  
-  matrix.fillCircle(col0, center-6, 2, matrix.color565(8, 8, 8));
-  matrix.fillCircle(col0, center+6, 2, matrix.color565(128, 128, 128));
+  matrix.fillCircle(col0, center-6, 2, matrix.colorHSV(0, 0, 8));
+  matrix.fillCircle(col0, center+6, 2, matrix.colorHSV(0, 0, 8));
 
-  matrix.fillCircle(col1, center-12, 2, matrix.color565(32, 32, 32));
-  matrix.fillCircle(col1, center, 2, matrix.color565(200, 200, 200));
-  matrix.fillCircle(col1, center+12, 2, matrix.color565(64, 64, 64));
+  matrix.fillCircle(col1, center-12, 2, matrix.colorHSV(0, 0, 255));
+  matrix.fillCircle(col1, center, 2, matrix.colorHSV(0, 0, 64));
+  matrix.fillCircle(col1, center+12, 2, matrix.colorHSV(0, 0, 8));
 
-  matrix.fillCircle(col2, center-12, 2, matrix.color565(100, 100, 100));
-  matrix.fillCircle(col2, center, 2, matrix.color565(150, 150, 150));
-  matrix.fillCircle(col2, center+12, 2, matrix.color565(16, 16, 16));
+  matrix.fillCircle(col2, center-12, 2, matrix.colorHSV(120*hsv_convert, 0, 8));
+  matrix.fillCircle(col2, center, 2, matrix.colorHSV(120*hsv_convert, 0, 64));
+  matrix.fillCircle(col2, center+12, 2, matrix.colorHSV(120*hsv_convert, 0, 255));
 
-  matrix.fillCircle(col3, center, 2, matrix.color565(32, 32, 32));
+  matrix.fillCircle(col3, center, 2, matrix.colorHSV(120*hsv_convert, 0, 255));
   
   matrix.show();
-  delay(100);
+  delay(10);
 }
