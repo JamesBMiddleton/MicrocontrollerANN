@@ -1,6 +1,6 @@
 Pulsar::Pulsar()
-    :_is_pulsing{false}, _brightness{8}, _max_brightness{255}, _step{1},
-    _relay_threshold{128}
+    :_is_pulsing{false}, _brightness{8}, _max_brightness{random(8, 128)},
+    _step{4}, _relay_threshold{64}
 {}
 
 void Pulsar::update()
@@ -9,14 +9,13 @@ void Pulsar::update()
     if (_brightness == 8) 
         _is_pulsing = false;
     if (_brightness == _max_brightness)
-        _step = -1;
+        _step = -_step;
     // I could make this virtual and include the _relay_threshold here.
 }
 
 NodePulsar::NodePulsar(const uint8_t& x, const uint8_t& y, 
-                        const uint8_t& radius, 
-                        LinkPulsarArray forward_links) 
-    :Pulsar{}, _x{x}, _y{y}, _radius{radius}, _f_links{forward_links}
+                        const uint8_t& radius) 
+    :Pulsar{}, _x{x}, _y{y}, _radius{radius} 
 {}
 
 void NodePulsar::draw()
@@ -36,10 +35,28 @@ void NodePulsar::update()
     }
 }
 
+void NodePulsar::add_forwardlink(LinkPulsar* link)
+{
+    if (_f_links.size != max_links)
+        _f_links.arr[_f_links.size++] = link;
+    else
+        Serial.println("ERROR: max connections reached");
+}
+
+void NodePulsar::add_backlink(LinkPulsar* link)
+{
+    if (_b_links.size != max_links)
+        _b_links.arr[_b_links.size++] = link;
+    else
+        Serial.println("ERROR: max connections reached");
+}
+
+
 LinkPulsar::LinkPulsar(const uint8_t& x1, const uint8_t& y1,
                         const uint8_t& x2, const uint8_t& y2, 
-                        NodePulsar* forward_node)
-    :Pulsar{}, _x1{x1}, _y1{y1}, _x2{x2}, _y2{y2}, _forward_node{forward_node}
+                        NodePulsar* forward_node, NodePulsar* backward_node)
+    :Pulsar{}, _x1{x1}, _y1{y1}, _x2{x2}, _y2{y2}, _forward_node{forward_node},
+    _backward_node{backward_node}
 {}
 
 void LinkPulsar::update()
@@ -58,3 +75,11 @@ void LinkPulsar::draw()
 }
 
 
+
+void link_nodes(NodePulsar* node1, NodePulsar* node2, LinkPulsar* link)
+{
+    *link = LinkPulsar{node1->get_x(), node1->get_y(), node2->get_x(), 
+                        node2->get_y(), node2, node1};
+    node1-> add_forwardlink(link);
+    node2-> add_backlink(link);
+}

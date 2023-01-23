@@ -1,3 +1,6 @@
+constexpr uint8_t max_links = 3;
+
+
 class Pulsar
 {
 public:
@@ -16,34 +19,44 @@ protected:
     // matrix is a global, would normally have a pointer to it here
 };
 
+
 class LinkPulsar;
 
 struct LinkPulsarArray
 {
-    LinkPulsar* arr[3];
-    uint8_t size;
+    LinkPulsar* arr[max_links];
+    uint8_t size = 0;
 };
+
 
 class NodePulsar : public Pulsar
 {
 public:
-    NodePulsar(const uint8_t& x, const uint8_t& y, const uint8_t& rad, 
-                LinkPulsarArray forward_links);
+    NodePulsar(const uint8_t& x, const uint8_t& y, const uint8_t& rad);
+    NodePulsar() :_x{0}, _y{0}, _radius{0} {}
     void update();
     void draw();
+    void add_forwardlink(LinkPulsar* link);
+    void add_backlink(LinkPulsar* link);
+    const uint8_t& get_x() const { return _x; }
+    const uint8_t& get_y() const { return _y; }
 private:
     uint8_t _x;
     uint8_t _y;
     uint8_t _radius;
     LinkPulsarArray _f_links;
+    LinkPulsarArray _b_links;
 };
+
 
 class LinkPulsar : public Pulsar
 {
 public:
     LinkPulsar(const uint8_t& x1, const uint8_t& y1,
                 const uint8_t& x2, const uint8_t& y2,
-                NodePulsar* forward_node);
+                NodePulsar* forward_node, NodePulsar* backward_node);
+    LinkPulsar() :_x1{0}, _y1{0}, _x2{0}, _y2{0},
+                  _forward_node{nullptr}, _backward_node{nullptr} {}
     void update();
     void draw();
 private:
@@ -52,4 +65,7 @@ private:
     uint8_t _x2;
     uint8_t _y2;
     NodePulsar* _forward_node;
+    NodePulsar* _backward_node;
 };
+
+
