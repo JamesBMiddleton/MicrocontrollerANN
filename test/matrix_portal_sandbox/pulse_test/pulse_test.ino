@@ -81,6 +81,22 @@ void setup() {
     link_nodes(&node_arr[6], &node_arr[8], &link_arr[16]);
     link_nodes(&node_arr[7], &node_arr[8], &link_arr[17]);
 
+    node_arr[0].set_max_brightness(8);
+    node_arr[2].set_max_brightness(64);
+    node_arr[5].set_max_brightness(64);
+
+    link_arr[0].set_max_brightness(8);
+    link_arr[1].set_max_brightness(8);
+    link_arr[2].set_max_brightness(8);
+
+    link_arr[6].set_max_brightness(32);
+    link_arr[7].set_max_brightness(32);
+    link_arr[8].set_max_brightness(8);
+
+    link_arr[9].set_max_brightness(64);
+    link_arr[10].set_max_brightness(8);
+    link_arr[11].set_max_brightness(8);
+
     node_arr[0].init_pulse();
     node_arr[1].init_pulse();
 
@@ -98,5 +114,15 @@ void loop() {
         node_arr[i].draw();
     }
     matrix.show();
-    delay(1);
+    
+    static int i = 0;
+    ++i;
+    if (i == 1000)
+    {
+        node_arr[0].init_pulse();
+        node_arr[1].init_pulse();
+        i = 0;
+    }
+
+    // delay(100);
 }

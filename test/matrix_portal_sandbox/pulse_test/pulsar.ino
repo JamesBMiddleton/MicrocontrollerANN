@@ -1,17 +1,35 @@
 Pulsar::Pulsar()
-    :_is_pulsing{false}, _brightness{8}, _max_brightness{random(8, 128)},
-    _step{4}, _relay_threshold{64}
+    :_is_pulsing{false}, _pulse_timer{0}, _pulse_length{64}, _pulse_step{1},
+    _relay_threshold{_pulse_length/2}, _brightness{8}, 
+    _max_brightness{128},
+    _bright_step{(_max_brightness - _brightness) / _pulse_length} 
 {}
 
 void Pulsar::update()
 {
-    _brightness += _step;
-    if (_brightness == 8) 
+    _pulse_timer += _pulse_step;
+    _brightness += _bright_step; // sacrificing memory for performance.
+    if (_pulse_timer == 0) 
+    {
         _is_pulsing = false;
-    if (_brightness == _max_brightness)
-        _step = -_step;
-    // I could make this virtual and include the _relay_threshold here.
+        _pulse_step = -_pulse_step;
+        _bright_step = -_bright_step;
+    }
+    if (_pulse_timer == _pulse_length)
+    {
+        _pulse_step = -_pulse_step;
+        _bright_step = -_bright_step;
+    }
 }
+
+void Pulsar::set_max_brightness(const uint8_t& new_max)
+{
+    if (_is_pulsing)
+        Serial.println("ERROR: max brightness set during pulse.");
+    _max_brightness = new_max;
+    _bright_step = (_max_brightness - _brightness) / _pulse_length;
+}
+
 
 NodePulsar::NodePulsar(const uint8_t& x, const uint8_t& y, 
                         const uint8_t& radius) 
@@ -28,8 +46,7 @@ void NodePulsar::update()
     if (_is_pulsing)
     {
         Pulsar::update();
-        Serial.println(_f_links.arr[0]->get_brightness());
-        if (_brightness == _relay_threshold && _step > 0)
+        if (_pulse_timer == _relay_threshold && _pulse_step > 0)
             for (uint8_t i{0}; i<_f_links.size; ++i)
                 _f_links.arr[i]->init_pulse();
     }
@@ -64,7 +81,7 @@ void LinkPulsar::update()
     if (_is_pulsing)
     {
         Pulsar::update();
-        if (_brightness == _relay_threshold && _step > 0)
+        if (_pulse_timer == _relay_threshold && _pulse_step > 0)
             _forward_node->init_pulse();
     }
 }

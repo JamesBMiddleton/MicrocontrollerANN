@@ -6,17 +6,19 @@ class Pulsar
 public:
     Pulsar(); 
     void update();
-    void init_pulse() { _is_pulsing = true; _step = 1; ++_brightness; }
-    void set_max(const uint8_t& max) { _max_brightness = max;
-                                       _relay_threshold = max / 2; }
-    const uint8_t& get_brightness() const { return _brightness; }
+    void init_pulse() { _is_pulsing = true;}
+    void set_max_brightness(const uint8_t& max);
+    const float& get_brightness() const { return _brightness; }
+    const bool& is_pulsing() const { return _is_pulsing; }
 protected:
     bool _is_pulsing;
-    uint8_t _brightness;
+    uint8_t _pulse_timer;
+    uint8_t _pulse_length;
+    uint8_t _pulse_step;
     uint8_t _relay_threshold;
     uint8_t _max_brightness;
-    int8_t _step;
-    // matrix is a global, would normally have a pointer to it here
+    float _brightness;
+    float _bright_step;
 };
 
 
