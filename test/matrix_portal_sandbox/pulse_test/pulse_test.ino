@@ -40,9 +40,6 @@ void setup() {
     if(status != PROTOMATTER_OK)
         for(;;);
 
-    // node_arr[0] = NodePulsar{32, 16, 2};
-    // node_arr[1] = NodePulsar{45, 8, 2};
-    // link_arr[0] = link_nodes(&node_arr[0], &node_arr[1]);
     node_arr[0] = NodePulsar{col0, center-6, 2};
     node_arr[1] = NodePulsar{col0, center+6, 2};
     
@@ -81,21 +78,24 @@ void setup() {
     link_nodes(&node_arr[6], &node_arr[8], &link_arr[16]);
     link_nodes(&node_arr[7], &node_arr[8], &link_arr[17]);
 
-    node_arr[0].set_max_brightness(8);
-    node_arr[2].set_max_brightness(64);
-    node_arr[5].set_max_brightness(64);
+    node_arr[0].set_max_brightness(9);
+    node_arr[3].set_max_brightness(9);
+    node_arr[5].set_max_brightness(255);
 
-    link_arr[0].set_max_brightness(8);
-    link_arr[1].set_max_brightness(8);
-    link_arr[2].set_max_brightness(8);
+    link_arr[0].set_max_brightness(9);
+    link_arr[1].set_max_brightness(9);
+    link_arr[2].set_max_brightness(9);
 
-    link_arr[6].set_max_brightness(32);
-    link_arr[7].set_max_brightness(32);
-    link_arr[8].set_max_brightness(8);
+    link_arr[4].set_max_brightness(9);
 
-    link_arr[9].set_max_brightness(64);
-    link_arr[10].set_max_brightness(8);
-    link_arr[11].set_max_brightness(8);
+    link_arr[6].set_max_brightness(128);
+    link_arr[7].set_max_brightness(9);
+    link_arr[8].set_max_brightness(9);
+
+    link_arr[9].set_max_brightness(9);
+    link_arr[10].set_max_brightness(9);
+    link_arr[11].set_max_brightness(9);
+    link_arr[12].set_max_brightness(9);
 
     node_arr[0].init_pulse();
     node_arr[1].init_pulse();
@@ -114,6 +114,7 @@ void loop() {
         node_arr[i].draw();
     }
     matrix.show();
+    Serial.println(node_arr[2].get_brightness());
     
     static int i = 0;
     ++i;
