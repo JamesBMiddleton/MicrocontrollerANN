@@ -54,7 +54,7 @@ void NodePulsar::update()
 
 void NodePulsar::add_forwardlink(LinkPulsar* link)
 {
-    if (_f_links.size != max_links)
+    if (_f_links.size != MAX_LINKS)
         _f_links.arr[_f_links.size++] = link;
     else
         Serial.println("ERROR: max connections reached");
@@ -62,7 +62,7 @@ void NodePulsar::add_forwardlink(LinkPulsar* link)
 
 void NodePulsar::add_backlink(LinkPulsar* link)
 {
-    if (_b_links.size != max_links)
+    if (_b_links.size != MAX_LINKS)
         _b_links.arr[_b_links.size++] = link;
     else
         Serial.println("ERROR: max connections reached");

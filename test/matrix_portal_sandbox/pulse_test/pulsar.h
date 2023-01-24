@@ -1,5 +1,6 @@
-constexpr uint8_t max_links = 3;
+#include <array>
 
+constexpr uint8_t MAX_LINKS = 3;
 
 class Pulsar
 {
@@ -26,10 +27,9 @@ class LinkPulsar;
 
 struct LinkPulsarArray
 {
-    LinkPulsar* arr[max_links];
+    LinkPulsar* arr[MAX_LINKS];
     uint8_t size = 0;
 };
-
 
 class NodePulsar : public Pulsar
 {
