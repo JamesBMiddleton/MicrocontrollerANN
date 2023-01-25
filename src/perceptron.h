@@ -50,10 +50,10 @@ class MLP
 {
 public:
     MLP();
-    void forward_pass(FloatArray x, FloatArray y);
-    void backwards_pass(FloatArray x, FloatArray y);
-    const float& get_cost() const;
-private:
+    void forward_pass(FloatArray x, float y);
+    void backwards_pass(FloatArray x, float y);
+    const float& get_cost() const { return _prev_cost; }
+    // private:
     Layer _layer_h1;
     Layer _layer_h2;
     Layer _layer_o;
@@ -62,3 +62,4 @@ private:
 
 float sigmoid(const float& z);
 float half_mse(const float& a, const float& b);
+float random_decimal();

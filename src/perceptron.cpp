@@ -1,14 +1,15 @@
 #include "perceptron.h"
 #include <iostream>
+#include <random>
 
 Node::Node(const uint8_t& n_inputs)
-    : _prev_output{0}, _learning_rate{0.001}, _bias{0.5}
+    : _prev_output{0}, _learning_rate{0.001}, _bias{random_decimal()}
 {
     // if (n_inputs > MAX_NODES)
     // Serial.println("ERROR: n_inputs > MAX_NODES");
 
     for (uint8_t i{0}; i < n_inputs; ++i)
-        _weights.arr[_weights.size++] = 0.5;
+        _weights.arr[_weights.size++] = random_decimal();
 }
 
 float Node::forward_pass(FloatArray inputs)
@@ -81,16 +82,29 @@ FloatMatrix Layer::backwards_pass(FloatArray inputs,
     return input_grad_matrix;
 }
 
+MLP::MLP() : _layer_h1{3, 2}, _layer_h2{3, 3}, _layer_o{1, 3}, _prev_cost{0} {}
 
-MLP::MLP()
-    :_layer_h1{3, 2}, _layer_h2{3, 3}, _layer_o{1, 3}, _prev_cost{0}
-{}
-
-void MLP::forward_pass(FloatArray x, FloatArray y)
+void MLP::forward_pass(FloatArray x, float y)
 {
-    
+    FloatArray output = _layer_h1.forward_pass(x);
+    output = _layer_h2.forward_pass(output);
+    output = _layer_o.forward_pass(output);
+    _prev_cost = half_mse(output.arr[0], y);
+}
+
+void MLP::backwards_pass(FloatArray x, float y)
+{
+    FloatMatrix out_output_grads{{{{-(y - _layer_o._prev_outputs.arr[0])}, 1}},
+                                 1};
+    FloatMatrix h2_output_grads =
+        _layer_o.backwards_pass(_layer_h2._prev_outputs, out_output_grads);
+    FloatMatrix h1_output_grads =
+        _layer_h2.backwards_pass(_layer_h1._prev_outputs, h2_output_grads);
+    _layer_h1.backwards_pass(x, h1_output_grads);
 }
 
 float sigmoid(const float& z) { return 1 / (1 + exp(-z)); }
 
 float half_mse(const float& a, const float& y) { return 0.5 * pow((a - y), 2); }
+
+float random_decimal() { return (float)(rand() % 100) / 100; }
