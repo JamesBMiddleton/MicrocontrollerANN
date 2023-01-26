@@ -1,12 +1,7 @@
-#include "perceptron.h"
+#include "data.h"
 #include <iostream>
 
-Node node{3};
-
-Layer layer{3, 3};
-
 MLP mlp{};
-
 
 int main()
 {
@@ -19,16 +14,7 @@ int main()
     //
     // std::cout << mlp._layer_h1._nodes.arr[1]._weights.arr[0] << '\n';
 
-    constexpr int TRAIN_DATA_SZ = 4;
-    FloatArray x[TRAIN_DATA_SZ] = {
-        {{1, 1}, 2},
-        {{1, 0}, 2},
-        {{0, 1}, 2},
-        {{0, 0}, 2}
-    };
-    float y[TRAIN_DATA_SZ] = {1, 0, 0, 1};
-
-    constexpr int EPOCHS = 300;
+    constexpr int EPOCHS = 30;
 
     float lowest_cost = 1000;
     for (int i{0}; i<EPOCHS; ++i)
@@ -36,11 +22,10 @@ int main()
         float cost = 0;
         for (int j{0}; j<TRAIN_DATA_SZ; ++j)  
         {
-            mlp.forward_pass(x[j], y[j]);
-            mlp.backwards_pass(x[j], y[j]);
+            mlp.forward_pass(x_train[j], y_train[j]);
+            mlp.backwards_pass(x_train[j], y_train[j]);
             cost += mlp.get_cost();
         }
-        cost = cost / TRAIN_DATA_SZ;
         if (cost < lowest_cost)
             lowest_cost = cost;
         std::cout << cost << '\n';
