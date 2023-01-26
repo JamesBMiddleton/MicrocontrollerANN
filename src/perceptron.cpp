@@ -3,16 +3,17 @@
 #include <random>
 
 Node::Node(const uint8_t& n_inputs)
-    : _prev_output{0}, _learning_rate{0.001}, _bias{random_decimal()}
-{
-    // if (n_inputs > MAX_NODES)
-    // Serial.println("ERROR: n_inputs > MAX_NODES");
+    : _prev_output{0}, _learning_rate{0.001}, _bias{0}, _weights{{},n_inputs}
+{}
 
-    for (uint8_t i{0}; i < n_inputs; ++i)
-        _weights.arr[_weights.size++] = random_decimal();
+void Node::init_weights()
+{
+    _bias = random_decimal();
+    for (uint8_t i{0}; i<_weights.size; ++i)
+        _weights.arr[i] = random_decimal();
 }
 
-float Node::forward_pass(FloatArray inputs)
+float Node::forward_pass(const FloatArray& inputs)
 {
     // if (inputs.size != _weights.size)
     // Serial.println("ERROR: inputs != weights");
@@ -25,7 +26,7 @@ float Node::forward_pass(FloatArray inputs)
     return _prev_output;
 }
 
-FloatArray Node::backwards_pass(FloatArray inputs, FloatArray output_grads)
+FloatArray Node::backwards_pass(const FloatArray& inputs, const FloatArray& output_grads)
 {
     // if (inputs.size != _weights.size)
     // Serial.println("ERROR: inputs != weights");
@@ -57,7 +58,13 @@ Layer::Layer(const uint8_t& n_nodes, const uint8_t& n_inputs)
         _nodes.arr[_nodes.size++] = Node{n_inputs};
 }
 
-FloatArray Layer::forward_pass(FloatArray inputs)
+void Layer::init_weights()
+{
+    for (uint8_t i{0}; i < _nodes.size; ++i)
+        _nodes.arr[i].init_weights(); 
+}
+
+FloatArray Layer::forward_pass(const FloatArray& inputs)
 {
     _prev_outputs.size = 0;
     for (uint8_t i{0}; i < _nodes.size; ++i)
@@ -66,8 +73,8 @@ FloatArray Layer::forward_pass(FloatArray inputs)
     return _prev_outputs;
 }
 
-FloatMatrix Layer::backwards_pass(FloatArray inputs,
-                                  FloatMatrix output_grad_matrix)
+FloatMatrix Layer::backwards_pass(const FloatArray& inputs,
+                                  const FloatMatrix& output_grad_matrix)
 {
     FloatMatrix input_grad_matrix;
     input_grad_matrix.size = inputs.size;
@@ -84,7 +91,14 @@ FloatMatrix Layer::backwards_pass(FloatArray inputs,
 
 MLP::MLP() : _layer_h1{3, 2}, _layer_h2{3, 3}, _layer_o{1, 3}, _prev_cost{0} {}
 
-void MLP::forward_pass(FloatArray x, float y)
+void MLP::init_weights()
+{
+    _layer_h1.init_weights();
+    _layer_h2.init_weights();
+    _layer_o.init_weights();
+}
+
+void MLP::forward_pass(const FloatArray& x, const float& y)
 {
     FloatArray output = _layer_h1.forward_pass(x);
     output = _layer_h2.forward_pass(output);
@@ -92,14 +106,14 @@ void MLP::forward_pass(FloatArray x, float y)
     _prev_cost = half_mse(output.arr[0], y);
 }
 
-void MLP::backwards_pass(FloatArray x, float y)
+void MLP::backwards_pass(const FloatArray& x, const float& y)
 {
-    FloatMatrix out_output_grads{{{{-(y - _layer_o._prev_outputs.arr[0])}, 1}},
+    FloatMatrix out_output_grads{{{{-(y - _layer_o.get_outputs().arr[0])}, 1}},
                                  1};
     FloatMatrix h2_output_grads =
-        _layer_o.backwards_pass(_layer_h2._prev_outputs, out_output_grads);
+        _layer_o.backwards_pass(_layer_h2.get_outputs(), out_output_grads);
     FloatMatrix h1_output_grads =
-        _layer_h2.backwards_pass(_layer_h1._prev_outputs, h2_output_grads);
+        _layer_h2.backwards_pass(_layer_h1.get_outputs(), h2_output_grads);
     _layer_h1.backwards_pass(x, h1_output_grads);
 }
 

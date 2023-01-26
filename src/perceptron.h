@@ -20,9 +20,10 @@ class Node
 public:
     Node(){}; // bad practice?
     Node(const uint8_t& n_inputs);
-    float forward_pass(FloatArray inputs); // const ref?
-    FloatArray backwards_pass(FloatArray inputs, FloatArray output_grads);
-    // private:
+    void init_weights();
+    float forward_pass(const FloatArray& inputs);
+    FloatArray backwards_pass(const FloatArray& inputs, const FloatArray& output_grads);
+private:
     float _prev_output;
     float _learning_rate;
     float _bias;
@@ -33,10 +34,12 @@ class Layer
 {
 public:
     Layer(const uint8_t& n_nodes, const uint8_t& n_inputs);
-    FloatArray forward_pass(FloatArray inputs);
-    FloatMatrix backwards_pass(FloatArray inputs,
-                               FloatMatrix output_grad_matrix);
-    // private:
+    void init_weights();
+    FloatArray forward_pass(const FloatArray& inputs);
+    FloatMatrix backwards_pass(const FloatArray& inputs,
+                               const FloatMatrix& output_grad_matrix);
+    const FloatArray& get_outputs() const { return _prev_outputs; }
+private:
     struct NodeArray
     {
         Node arr[MAX_NODES];
@@ -50,10 +53,11 @@ class MLP
 {
 public:
     MLP();
-    void forward_pass(FloatArray x, float y);
-    void backwards_pass(FloatArray x, float y);
+    void init_weights();
+    void forward_pass(const FloatArray& x, const float& y);
+    void backwards_pass(const FloatArray& x, const float& y);
     const float& get_cost() const { return _prev_cost; }
-    // private:
+private:
     Layer _layer_h1;
     Layer _layer_h2;
     Layer _layer_o;
