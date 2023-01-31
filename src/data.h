@@ -1,6 +1,10 @@
 #include "perceptron.h"
 
 constexpr int TRAIN_DATA_SZ = 331;
+constexpr float X0_TRAIN_MIN = -2.2496;
+constexpr float X0_TRAIN_MAX = 2.27832;
+constexpr float X1_TRAIN_MIN = -2.36422;
+constexpr float X1_TRAIN_MAX = 2.78577;
 
 FloatArray x_train[TRAIN_DATA_SZ] = {
     {{-0.212032,-1.566332}, 2},

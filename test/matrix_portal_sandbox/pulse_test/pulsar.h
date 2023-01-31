@@ -1,6 +1,8 @@
 #include <array>
 
 constexpr uint8_t MAX_LINKS = 3;
+constexpr uint8_t MAX_BRIGHTNESS = 254;
+constexpr uint8_t MIN_BRIGHTNESS = 9;
 
 class Pulsar
 {

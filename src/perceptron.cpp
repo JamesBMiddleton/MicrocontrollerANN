@@ -15,9 +15,6 @@ void Node::init_weights()
 
 float Node::forward_pass(const FloatArray& inputs)
 {
-    // if (inputs.size != _weights.size)
-    // Serial.println("ERROR: inputs != weights");
-
     float z_sum = 0;
     for (uint8_t i{0}; i < _weights.size; ++i)
         z_sum += _weights.arr[i] * inputs.arr[i];
@@ -28,9 +25,6 @@ float Node::forward_pass(const FloatArray& inputs)
 
 FloatArray Node::backwards_pass(const FloatArray& inputs, const FloatArray& output_grads)
 {
-    // if (inputs.size != _weights.size)
-    // Serial.println("ERROR: inputs != weights");
-
     FloatArray input_grads;
     float z_grad = _prev_output * (1 - _prev_output);
     for (uint8_t i{0}; i < _weights.size; ++i)
@@ -121,4 +115,4 @@ float sigmoid(const float& z) { return 1 / (1 + exp(-z)); }
 
 float half_mse(const float& a, const float& y) { return 0.5 * pow((a - y), 2); }
 
-float random_decimal() { return (float)(rand() % 100) / 100; }
+float random_decimal() { return ((float)(rand() % 200) / 100) - 1; }

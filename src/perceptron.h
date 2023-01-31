@@ -2,6 +2,8 @@
 #include <math.h>
 
 constexpr uint8_t MAX_NODES = 3;
+constexpr uint8_t MAX_BRIGHTNESS = 254;
+constexpr uint8_t MIN_BRIGHTNESS = 9;
 
 struct FloatArray
 {
@@ -23,6 +25,8 @@ public:
     void init_weights();
     float forward_pass(const FloatArray& inputs);
     FloatArray backwards_pass(const FloatArray& inputs, const FloatArray& output_grads);
+    const float& get_output() const { return _prev_output; }
+    const FloatArray& get_weights() const { return _weights; }
 private:
     float _prev_output;
     float _learning_rate;
