@@ -14,7 +14,7 @@ void Node::init_weights()
         _weights.arr[i] = random_decimal();
 }
 
-float Node::forward_pass(const FloatArray& inputs)
+float Node::forward_pass(const StaticVec<float, MAX_NODES>& inputs)
 {
     float z_sum = 0;
     for (uint8_t i{0}; i < _weights.size; ++i)
@@ -25,10 +25,11 @@ float Node::forward_pass(const FloatArray& inputs)
     return _prev_output;
 }
 
-FloatArray Node::backwards_pass(const FloatArray& inputs,
-                                const FloatArray& output_grads)
+StaticVec<float, MAX_NODES>
+Node::backwards_pass(const StaticVec<float, MAX_NODES>& inputs,
+                     const StaticVec<float, MAX_NODES>& output_grads)
 {
-    FloatArray input_grads;
+    StaticVec<float, MAX_NODES> input_grads{{}, 0};
     float z_grad = _prev_output * (1 - _prev_output);
     for (uint8_t i{0}; i < _weights.size; ++i)
     {
@@ -41,7 +42,7 @@ FloatArray Node::backwards_pass(const FloatArray& inputs,
             full_input_grad += output_grads.arr[j] * part_input_grad;
             full_weight_grad += output_grads.arr[j] * part_weight_grad;
         }
-        input_grads.arr[input_grads.size++] = full_input_grad;
+        input_grads.arr[input_grads.size++] = full_input_grad; // !
         _weights.arr[i] = _weights.arr[i] - (_learning_rate * full_weight_grad);
     }
     float bias_grad = _prev_output * (1 - _prev_output);
@@ -61,7 +62,8 @@ void Layer::init_weights()
         _nodes.arr[i].init_weights();
 }
 
-FloatArray Layer::forward_pass(const FloatArray& inputs)
+StaticVec<float, MAX_NODES>
+Layer::forward_pass(const StaticVec<float, MAX_NODES>& inputs)
 {
     _prev_outputs.size = 0;
     for (uint8_t i{0}; i < _nodes.size; ++i)
@@ -70,16 +72,16 @@ FloatArray Layer::forward_pass(const FloatArray& inputs)
     return _prev_outputs;
 }
 
-FloatMatrix Layer::backwards_pass(const FloatArray& inputs,
-                                  const FloatMatrix& output_grad_matrix)
+StaticVec<StaticVec<float, MAX_NODES>, MAX_NODES> Layer::backwards_pass(
+    const StaticVec<float, MAX_NODES>& inputs,
+    const StaticVec<StaticVec<float, MAX_NODES>, MAX_NODES>& output_grad_matrix)
 {
-    FloatMatrix input_grad_matrix;
-    input_grad_matrix.size = inputs.size;
+    StaticVec<StaticVec<float, MAX_NODES>, MAX_NODES> input_grad_matrix{{}, 0};
     for (uint8_t i{0}; i < _nodes.size; ++i)
     {
-        FloatArray input_grads =
+        StaticVec<float, MAX_NODES> input_grads =
             _nodes.arr[i].backwards_pass(inputs, output_grad_matrix.arr[i]);
-        for (uint8_t j{0}; j < input_grad_matrix.size; ++j)
+        for (uint8_t j{0}; j < inputs.size; ++j)
             input_grad_matrix.arr[j].arr[input_grad_matrix.arr[j].size++] =
                 input_grads.arr[j];
     }
@@ -95,21 +97,23 @@ void MLP::init_weights()
     _layer_o.init_weights();
 }
 
-void MLP::forward_pass(const FloatArray& x, const float& y)
+void MLP::forward_pass(const StaticVec<float, MAX_NODES>& x, const float& y)
 {
-    FloatArray output = _layer_h1.forward_pass(x);
+    StaticVec<float, MAX_NODES> output = _layer_h1.forward_pass(x);
     output = _layer_h2.forward_pass(output);
     output = _layer_o.forward_pass(output);
     _prev_cost = half_mse(output.arr[0], y);
 }
 
-void MLP::backwards_pass(const FloatArray& x, const float& y)
+void MLP::backwards_pass(const StaticVec<float, MAX_NODES>& x, const float& y)
 {
-    FloatMatrix out_output_grads{{{{-(y - _layer_o.get_outputs().arr[0])}, 1}},
-                                 1};
-    FloatMatrix h2_output_grads =
+    StaticVec<StaticVec<float, MAX_NODES>, MAX_NODES> out_output_grads{
+        {StaticVec<float, MAX_NODES>{{-(y - _layer_o.get_outputs().arr[0])},
+                                     1}},
+        1};
+    StaticVec<StaticVec<float, MAX_NODES>, MAX_NODES> h2_output_grads =
         _layer_o.backwards_pass(_layer_h2.get_outputs(), out_output_grads);
-    FloatMatrix h1_output_grads =
+    StaticVec<StaticVec<float, MAX_NODES>, MAX_NODES> h1_output_grads =
         _layer_h2.backwards_pass(_layer_h1.get_outputs(), h2_output_grads);
     _layer_h1.backwards_pass(x, h1_output_grads);
 }
@@ -124,6 +128,8 @@ const Layer& MLP::get_layer(uint8_t l) const
         return _layer_h2;
     case 2:
         return _layer_o;
+    default:
+        return _layer_o; // !!!!
     }
 }
 
@@ -155,7 +161,7 @@ MinMaxValues get_min_max_values(const MLP& mlp)
 
     for (int i{0}; i < NUM_LAYERS; ++i)
     {
-        const NodeArray& nodes = mlp.get_layer(i).get_nodes();
+        const StaticVec<Node, MAX_NODES>& nodes = mlp.get_layer(i).get_nodes();
         for (int j{0}; j < nodes.size; ++j)
         {
             const Node& node = nodes.arr[j];
