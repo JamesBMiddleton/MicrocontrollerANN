@@ -2,13 +2,6 @@
 // #include <iostream>
 // #include <random>
 
-template<typename T, int N>
-StaticVec<T, N>(std::initializer_list<T> l)
-{
-    for (auto i = l.begin(); i != l.end(); ++i)
-        arr[size++] = *i;
-}
-
 Node::Node(const uint8_t& n_inputs)
     : _prev_output{0}, _learning_rate{0.001}, _bias{0}, _weights{{}, n_inputs}
 {
@@ -115,8 +108,9 @@ void MLP::forward_pass(const StaticVec<float, MAX_NODES>& x, const float& y)
 
 void MLP::backwards_pass(const StaticVec<float, MAX_NODES>& x, const float& y)
 {
-    StaticVec<StaticVec<float, MAX_NODES>, MAX_NODES> out_output_grads{{StaticVec<float, MAX_NODES>{{-(y - _layer_o.get_outputs().arr[0])}, 1}},
-                                 1};
+    StaticVec<StaticVec<float, MAX_NODES>, MAX_NODES> 
+    out_output_grads{{StaticVec<float, MAX_NODES>{
+    {-(y - _layer_o.get_outputs().arr[0])}, 1}}, 1};
     StaticVec<StaticVec<float, MAX_NODES>, MAX_NODES> h2_output_grads =
         _layer_o.backwards_pass(_layer_h2.get_outputs(), out_output_grads);
     StaticVec<StaticVec<float, MAX_NODES>, MAX_NODES> h1_output_grads =
@@ -153,6 +147,8 @@ float min_max_scale(const float& x, const float& x_min, const float& x_max)
 float brightness_scale(const float& x)
 // assume values range between 0-1
 {
+    Serial.print("min maxed = ");
+    Serial.println(x);
     return (x * (MAX_BRIGHTNESS - MIN_BRIGHTNESS)) + 9;
 }
 

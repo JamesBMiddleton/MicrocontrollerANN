@@ -12,6 +12,7 @@ public:
     void init_pulse() { _is_pulsing = true;}
     void set_max_brightness(const uint8_t& max);
     const float& get_brightness() const { return _brightness; }
+    const uint8_t& get_max_brightness() const { return _max_brightness; }
     const bool& is_pulsing() const { return _is_pulsing; }
 protected:
     bool _is_pulsing;

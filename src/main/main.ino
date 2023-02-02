@@ -26,17 +26,40 @@ constexpr uint8_t col1 = 22;
 constexpr uint8_t col2 = 46;
 constexpr uint8_t col3 = 58;
 
-// constexpr uint8_t num_nodes = 9;
-// constexpr uint8_t num_links = 18;
-
-StaticVec<StaticVec<NodePulsar, MAX_NODES>, NUM_LAYERS> node_matrix;//{{}, NUM_LAYERS};
-StaticVec<StaticVec<StaticVec<LinkPulsar, MAX_LINKS>, MAX_NODES>, NUM_LAYERS> link_matrix;//{{}, NUM_LAYERS};
+StaticVec<StaticVec<NodePulsar, MAX_NODES>, NUM_LAYERS> node_matrix{{}, NUM_LAYERS};
+StaticVec<StaticVec<StaticVec<LinkPulsar, MAX_LINKS>, MAX_NODES>, NUM_LAYERS> link_matrix{{}, NUM_LAYERS};
 NodePulsar input1_node{col0, center-6, 2};
 NodePulsar input2_node{col0, center+6, 2};
 
 
 MLP mlp{};
 
+
+void update_pulsar_brightnesses()
+{
+    MinMaxValues values = get_min_max_values(mlp);
+    // input1 and 2 !!!
+    for (int i{0}; i<link_matrix.size; ++i)
+    {
+        const StaticVec<Node, MAX_NODES>& nodes = mlp.get_layer(i).get_nodes();
+        for (int j{0}; j<link_matrix[i].size; ++j)
+        {
+            const Node& node = nodes.arr[j];
+            float output = node.get_output();
+            float scaled = min_max_scale(output, values.node_min, values.node_max);
+            float brightness = brightness_scale(scaled);
+            node_matrix[i][j].set_max_brightness(brightness);
+            for (int k{0}; k<link_matrix[i][j].size; ++k)
+            {
+                float link_strength = node.get_weights().arr[k] * node.get_inputs().arr[k];
+                float scaled = min_max_scale(link_strength, values.link_min, values.link_max);
+                float brightness = brightness_scale(scaled);
+                link_matrix[i][j][k].set_max_brightness(brightness);
+                Serial.println(link_matrix[i][j][k].get_max_brightness());
+            }
+        }
+    }
+}
 
 void setup() {
 
@@ -48,112 +71,111 @@ void setup() {
     if(status != PROTOMATTER_OK)
         for(;;);
 
+    randomSeed(analogRead(0));
+    mlp.init_weights();
+
     node_matrix[0][0] = NodePulsar{col1, center-12, 2};
     node_matrix[0][1] = NodePulsar{col1, center, 2};
     node_matrix[0][2] = NodePulsar{col1, center+12, 2};
-    node_matrix[0].size = MAX_NODES;
+    node_matrix[0].size = 3; 
 
     node_matrix[1][0] = NodePulsar{col2, center-12, 2};
     node_matrix[1][1] = NodePulsar{col2, center, 2};
     node_matrix[1][2] = NodePulsar{col2, center+12, 2};
-    node_matrix[1].size = MAX_NODES;
+    node_matrix[1].size = 3;
 
     node_matrix[2][0] = NodePulsar{col3, center, 2};
     node_matrix[2].size = 1;
 
     
-    // link_nodes(&input1_node, &node_matrix.arr[0].arr[0], &link_matrix.arr[0].);
-    // link_nodes(&node_arr[0], &node_arr[3], &link_arr[1]);
-    // link_nodes(&node_arr[0], &node_arr[4], &link_arr[2]);
-    //
-    // link_nodes(&node_arr[1], &node_arr[2], &link_arr[3]);
-    // link_nodes(&node_arr[1], &node_arr[3], &link_arr[4]);
-    // link_nodes(&node_arr[1], &node_arr[4], &link_arr[5]);
-    //
-    //
-    // link_nodes(&node_arr[2], &node_arr[5], &link_arr[6]);
-    // link_nodes(&node_arr[2], &node_arr[6], &link_arr[7]);
-    // link_nodes(&node_arr[2], &node_arr[7], &link_arr[8]);
-    //
-    // link_nodes(&node_arr[3], &node_arr[5], &link_arr[9]);
-    // link_nodes(&node_arr[3], &node_arr[6], &link_arr[10]);
-    // link_nodes(&node_arr[3], &node_arr[7], &link_arr[11]);
-    //
-    // link_nodes(&node_arr[4], &node_arr[5], &link_arr[12]);
-    // link_nodes(&node_arr[4], &node_arr[6], &link_arr[13]);
-    // link_nodes(&node_arr[4], &node_arr[7], &link_arr[14]);
-    //
-    // link_nodes(&node_arr[5], &node_arr[8], &link_arr[15]);
-    // link_nodes(&node_arr[6], &node_arr[8], &link_arr[16]);
-    // link_nodes(&node_arr[7], &node_arr[8], &link_arr[17]);
-    //
-    // node_arr[0].set_max_brightness(9);
-    // node_arr[3].set_max_brightness(9);
-    // node_arr[5].set_max_brightness(255);
-    //
-    // link_arr[0].set_max_brightness(9);
-    // link_arr[1].set_max_brightness(9);
-    // link_arr[2].set_max_brightness(9);
-    //
-    // link_arr[4].set_max_brightness(9);
-    //
-    // link_arr[6].set_max_brightness(128);
-    // link_arr[7].set_max_brightness(9);
-    // link_arr[8].set_max_brightness(9);
-    //
-    // link_arr[9].set_max_brightness(9);
-    // link_arr[10].set_max_brightness(9);
-    // link_arr[11].set_max_brightness(9);
-    // link_arr[12].set_max_brightness(9);
-    //
-    // node_arr[0].init_pulse();
-    // node_arr[1].init_pulse();
-    //
-    randomSeed(analogRead(0));
-    mlp.init_weights();
+    link_nodes(&input1_node, &node_matrix[0][0], &link_matrix[0][0][0]);
+    link_nodes(&input1_node, &node_matrix[0][1], &link_matrix[0][0][1]);
+    link_nodes(&input1_node, &node_matrix[0][2], &link_matrix[0][0][2]);
+    link_matrix[0][0].size = 3;
+
+    link_nodes(&input2_node, &node_matrix[0][0], &link_matrix[0][1][0]);
+    link_nodes(&input2_node, &node_matrix[0][1], &link_matrix[0][1][1]);
+    link_nodes(&input2_node, &node_matrix[0][2], &link_matrix[0][1][2]);
+    link_matrix[0][1].size = 3;
+
+    link_matrix[0].size = 2;
+
+    link_nodes(&node_matrix[0][0], &node_matrix[1][0], &link_matrix[1][0][0]);
+    link_nodes(&node_matrix[0][0], &node_matrix[1][1], &link_matrix[1][0][1]);
+    link_nodes(&node_matrix[0][0], &node_matrix[1][2], &link_matrix[1][0][2]);
+    link_matrix[1][0].size = 3;
+
+    link_nodes(&node_matrix[0][1], &node_matrix[1][0], &link_matrix[1][1][0]);
+    link_nodes(&node_matrix[0][1], &node_matrix[1][1], &link_matrix[1][1][1]);
+    link_nodes(&node_matrix[0][1], &node_matrix[1][2], &link_matrix[1][1][2]);
+    link_matrix[1][1].size = 3;
+    
+    link_nodes(&node_matrix[0][2], &node_matrix[1][0], &link_matrix[1][2][0]);
+    link_nodes(&node_matrix[0][2], &node_matrix[1][1], &link_matrix[1][2][1]);
+    link_nodes(&node_matrix[0][2], &node_matrix[1][2], &link_matrix[1][2][2]);
+    link_matrix[1][2].size = 3;
+
+    link_matrix[1].size = 3;
+
+    link_nodes(&node_matrix[1][0], &node_matrix[2][0], &link_matrix[2][0][0]);
+    link_matrix[2][0].size = 1;
+
+    link_nodes(&node_matrix[1][1], &node_matrix[2][0], &link_matrix[2][1][0]);
+    link_matrix[2][1].size = 1;
+
+    link_nodes(&node_matrix[1][2], &node_matrix[2][0], &link_matrix[2][2][0]);
+    link_matrix[2][2].size = 1;
+
+    link_matrix[2].size = 3;
 }
 
 void loop() {
 
-    static float lowest_cost = 10000;
-    float cost = 0;
-    for (int j{0}; j < TRAIN_DATA_SZ; ++j)  
+    static int instance = 0;
+    static float cost = 0;
+    static int i = 0;
+    ++i;
+    if (i == 1000)
     {
-        mlp.forward_pass(x_train.arr[j], y_train[j]);
-
-        MinMaxValues v = get_min_max_values(mlp);
-
-        mlp.backwards_pass(x_train.arr[j], y_train[j]);
-        cost += mlp.get_cost();
-        // delay(1);
+        i = 0;
+        if (instance == TRAIN_DATA_SZ)
+        {
+            Serial.print("cost =");
+            Serial.println(cost);
+            cost = 0;
+            instance = 0;
+        }
+        else
+        {
+            mlp.forward_pass(x_train.arr[instance], y_train[instance]);
+            update_pulsar_brightnesses();
+            mlp.backwards_pass(x_train.arr[instance], y_train[instance]);
+            cost += mlp.get_cost();
+            ++instance;
+        }
+        input1_node.init_pulse();
+        input2_node.init_pulse();
     }
-    Serial.println(cost);
-    if (cost < lowest_cost)
-        lowest_cost = cost;
 
-    // Serial.println(lowest_cost);
-    //
-    // for (int i{0}; i<num_links; ++i)
-    // {
-    //     link_arr[i].update();
-    //     link_arr[i].draw();
-    // }
-    // for (int i{0}; i<num_nodes; ++i)
-    // {
-    //     node_arr[i].update();
-    //     node_arr[i].draw();
-    // }
-    // matrix.show();
-    // // Serial.println(node_arr[2].get_brightness());
-    // 
-    // static int i = 0;
-    // ++i;
-    // if (i == 1000)
-    // {
-    //     node_arr[0].init_pulse();
-    //     node_arr[1].init_pulse();
-    //     i = 0;
-    // }
+    for (int i{0}; i<link_matrix.size; ++i)
+        for (int j{0}; j<link_matrix[i].size; ++j)
+            for (int k{0}; k<link_matrix[i][j].size; ++k)
+            {
+                link_matrix[i][j][k].update();
+                link_matrix[i][j][k].draw();
+            }
+    input1_node.update();
+    input1_node.draw();
+    input2_node.update();
+    input2_node.draw();
+    for (int i{0}; i<node_matrix.size; ++i)
+        for (int j{0}; j<node_matrix[i].size; ++j)
+        {
+            node_matrix[i][j].update();
+            node_matrix[i][j].draw();
+        }
+    matrix.show();
 
-    delay(100);
+
+    // delay(1);
 }

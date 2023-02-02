@@ -7,10 +7,8 @@ constexpr uint8_t MAX_NODES = 3;
 
 template <typename T, int N> struct StaticVec
 {
-    StaticVec() {}; 
-    StaticVec(std::initializer_list<T> l);
-    std::array<T, N> arr{};
-    int size = 0;
+    std::array<T, N> arr;
+    int size;
     T& operator[](int i) { return arr[i]; }
 };
 
