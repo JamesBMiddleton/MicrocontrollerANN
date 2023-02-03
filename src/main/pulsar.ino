@@ -33,7 +33,7 @@ void Pulsar::set_max_brightness(const uint8_t& new_max)
 
 NodePulsar::NodePulsar(const uint8_t& x, const uint8_t& y, 
                         const uint8_t& radius) 
-    :Pulsar{}, _x{x}, _y{y}, _radius{radius}, _f_links{{}, 0}, _b_links{{}, 0}
+    :Pulsar{}, _x{x}, _y{y}, _radius{radius}
 {}
 
 void NodePulsar::draw()
@@ -47,27 +47,10 @@ void NodePulsar::update()
     {
         Pulsar::update();
         if (_pulse_timer == _relay_threshold && _pulse_step > 0)
-            for (uint8_t i{0}; i<_f_links.size; ++i)
-                _f_links.arr[i]->init_pulse();
+            for (uint8_t i{0}; i<_f_links.size(); ++i)
+                _f_links[i]->init_pulse();
     }
 }
-
-void NodePulsar::add_forwardlink(LinkPulsar* link)
-{
-    if (_f_links.size != MAX_LINKS)
-        _f_links.arr[_f_links.size++] = link;
-    else
-        Serial.println("ERROR: max connections reached");
-}
-
-void NodePulsar::add_backlink(LinkPulsar* link)
-{
-    if (_b_links.size != MAX_LINKS)
-        _b_links.arr[_b_links.size++] = link;
-    else
-        Serial.println("ERROR: max connections reached");
-}
-
 
 LinkPulsar::LinkPulsar(const uint8_t& x1, const uint8_t& y1,
                         const uint8_t& x2, const uint8_t& y2, 

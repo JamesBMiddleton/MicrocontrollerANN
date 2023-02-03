@@ -1,17 +1,10 @@
-#include <array>
-#include <initializer_list>
+#ifndef PERCEPTRON 
+#define PERCEPTRON
+
 #include <math.h>
+#include "static_vec.h"
 
 constexpr uint8_t NUM_LAYERS = 3;
-constexpr uint8_t MAX_NODES = 3;
-
-template <typename T, int N> struct StaticVec
-{
-    std::array<T, N> arr;
-    int size;
-    T& operator[](int i) { return arr[i]; }
-};
-
 
 struct MinMaxValues
 // 'node' = z_sum, 'link' = input * weight
@@ -92,3 +85,5 @@ float random_decimal();
 float min_max_scale(const float& x, const float& x_min, const float& x_max);
 float brightness_scale(const float& x);
 MinMaxValues get_min_max_values(const MLP& mlp);
+
+#endif

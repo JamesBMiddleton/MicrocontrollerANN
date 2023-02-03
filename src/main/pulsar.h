@@ -1,4 +1,7 @@
-#include "perceptron.h"
+#ifndef PULSAR
+#define PULSAR
+
+#include "static_vec.h"
 
 constexpr uint8_t MAX_LINKS = 3;
 constexpr uint8_t MAX_BRIGHTNESS = 254;
@@ -35,8 +38,8 @@ public:
     NodePulsar() :_x{0}, _y{0}, _radius{0} {}
     void update();
     void draw();
-    void add_forwardlink(LinkPulsar* link);
-    void add_backlink(LinkPulsar* link);
+    void add_forwardlink(LinkPulsar* link) { _f_links.push_back(link); }
+    void add_backlink(LinkPulsar* link) { _b_links.push_back(link); }
     const uint8_t& get_x() const { return _x; }
     const uint8_t& get_y() const { return _y; }
 private:
@@ -67,3 +70,4 @@ private:
     NodePulsar* _backward_node;
 };
 
+#endif
