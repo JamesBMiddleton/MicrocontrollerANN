@@ -55,7 +55,7 @@ void update_pulsar_brightnesses()
                 float scaled = min_max_scale(link_strength, values.link_min, values.link_max);
                 float brightness = brightness_scale(scaled);
                 link_matrix[i][j][k].set_max_brightness(brightness);
-                Serial.println(link_matrix[i][j][k].get_max_brightness());
+                // Serial.println(link_matrix[i][j][k].get_max_brightness());
             }
         }
     }

@@ -147,8 +147,8 @@ float min_max_scale(const float& x, const float& x_min, const float& x_max)
 float brightness_scale(const float& x)
 // assume values range between 0-1
 {
-    Serial.print("min maxed = ");
-    Serial.println(x);
+    // Serial.print("min maxed = ");
+    // Serial.println(x);
     return (x * (MAX_BRIGHTNESS - MIN_BRIGHTNESS)) + 9;
 }
 
