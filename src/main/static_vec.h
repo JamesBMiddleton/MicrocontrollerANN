@@ -4,7 +4,7 @@
 #include <array>
 #include <stdint.h>
 
-constexpr int MAX_NODES = 3;
+constexpr int MAX_NODES = 3; // not clean
 
 template <typename T, int N>
 class StaticVec
@@ -14,11 +14,12 @@ public:
     StaticVec(int i) :_size{i} {}
     void push_back(const T& value);
     int size() const { return _size; }
+    int max_size() const { return sizeof(_arr) / sizeof(T); }
     void clear() { _size = 0; }
     const T& operator[](int i) const;
     T& operator[](int i);
 private:
-    std::array<T, N> _arr{};
+    T _arr[N];
     int _size = 0;
 };
 

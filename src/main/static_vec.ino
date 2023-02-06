@@ -3,7 +3,7 @@ template<typename T, int N>
 void StaticVec<T, N>::push_back(const T& value)
 {
   #ifdef DEBUG
-  if (_size == _arr.max_size())
+  if (_size == max_size())
     error = "StaticVec Array Overflow!";
   #endif
    _arr[_size++] = value;

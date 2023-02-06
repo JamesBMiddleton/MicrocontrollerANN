@@ -1,7 +1,7 @@
 Pulsar::Pulsar()
     :_is_pulsing{false}, _pulse_timer{0}, _pulse_length{120}, _pulse_step{1},
-    _relay_threshold{_pulse_length/2}, _brightness{MIN_BRIGHTNESS}, 
-    _max_brightness{MAX_BRIGHTNESS},
+    _relay_threshold{(uint8_t)(_pulse_length/2)}, _max_brightness{MAX_BRIGHTNESS},
+    _brightness{MIN_BRIGHTNESS},
     _bright_step{(_max_brightness - _brightness) / _pulse_length} 
 {}
 
