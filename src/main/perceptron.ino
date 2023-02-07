@@ -131,27 +131,20 @@ float half_mse(const float& a, const float& y) { return 0.5 * pow((a - y), 2); }
 
 float random_decimal() { return (((float)random(200)) / 100) - 1; }
 
-float min_max_scale(const float& x, const float& x_min, const float& x_max)
+float minmax_scale(const float& x, const float& x_min, const float& x_max, const float& new_min, const float& new_max)
 {
-    return (x - x_min) / (x_max - x_min);
+    return MIN_BRIGHTNESS + (((x - x_min) * (new_max - new_min)) / (x_max - x_min));
 }
 
-float brightness_scale(const float& x)
-// assume values range between 0-1
-{
-    // Serial.print("min maxed = ");
-    // Serial.println(x);
-    return (x * (MAX_BRIGHTNESS - MIN_BRIGHTNESS)) + 9;
-}
-
-MinMaxValues get_min_max_values(const MLP& mlp)
+MinMaxValues get_abs_minmaxes(const MLP& mlp)
+// absolute min_max values
 {
     MinMaxValues values;
     const Node& temp = mlp.get_layer(0).get_nodes()[0];
-    values.node_min = temp.get_output();
-    values.node_max = temp.get_output();
-    values.link_min = temp.get_weights()[0] * temp.get_inputs()[0];
-    values.link_max = temp.get_weights()[0] * temp.get_inputs()[0];
+    values.node_min = abs(temp.get_output());
+    values.node_max = abs(temp.get_output());
+    values.link_min = abs(temp.get_weights()[0] * temp.get_inputs()[0]);
+    values.link_max = abs(temp.get_weights()[0] * temp.get_inputs()[0]);
 
     for (int i{0}; i < NUM_LAYERS; ++i)
     {
@@ -166,7 +159,7 @@ MinMaxValues get_min_max_values(const MLP& mlp)
             for (int k{0}; k < node.get_weights().size(); ++k)
             {
                 float link_strength =
-                    node.get_weights()[k] * node.get_inputs()[k];
+                    abs(node.get_weights()[k] * node.get_inputs()[k]);
                 if (link_strength > values.link_max)
                     values.link_max = link_strength;
                 if (link_strength < values.link_min)

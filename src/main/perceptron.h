@@ -82,8 +82,7 @@ private:
 float sigmoid(const float& z);
 float half_mse(const float& a, const float& b);
 float random_decimal();
-float min_max_scale(const float& x, const float& x_min, const float& x_max);
-float brightness_scale(const float& x);
-MinMaxValues get_min_max_values(const MLP& mlp);
+float minmax_scale(const float& x, const float& x_min, const float& x_max, const float& new_min, const float& new_max);
+MinMaxValues get_abs_minmaxes(const MLP& mlp);
 
 #endif

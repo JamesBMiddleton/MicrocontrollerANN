@@ -43,10 +43,19 @@ NodePulsar input2_node{col0, center+6, 2};
 MLP mlp{};
 
 
-void update_pulsar_brightnesses()
+void update_pulsar_brightnesses(const StaticVec<float, MAX_NODES> inputs)
 {
-    MinMaxValues values = get_min_max_values(mlp);
-    // input1 and 2 !!!
+    MinMaxValues values = get_abs_minmaxes(mlp);
+    Serial.println(values.link_min);
+    Serial.println(values.link_max);
+    Serial.println(values.node_min);
+    Serial.println(values.node_max);
+    Serial.println();
+
+    float brightness = minmax_scale(abs(inputs[0]), 0, X0_TRAIN_MAX, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
+    input1_node.set_max_brightness(brightness);
+    brightness = minmax_scale(abs(inputs[1]), 0, X1_TRAIN_MAX, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
+    input2_node.set_max_brightness(brightness);
     for (int i{0}; i<node_matrix.size(); ++i)
     {
         const StaticVec<Node, MAX_NODES>& nodes = mlp.get_layer(i).get_nodes();
@@ -54,15 +63,14 @@ void update_pulsar_brightnesses()
         {
             const Node& node = nodes[j];
             float output = node.get_output();
-            float scaled = min_max_scale(output, values.node_min, values.node_max);
-            float brightness = brightness_scale(scaled);
+            brightness = minmax_scale(abs(output), values.node_min, values.node_max, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
             node_matrix[i][j].set_max_brightness(brightness);
             for (int k{0}; k<link_matrix[i][j].size(); ++k)
             {
                 float link_strength = node.get_weights()[k] * node.get_inputs()[k];
-                float scaled = min_max_scale(link_strength, values.link_min, values.link_max);
-                float brightness = brightness_scale(scaled);
+                brightness = minmax_scale(abs(link_strength), values.link_min, values.link_max, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
                 link_matrix[i][j][k].set_max_brightness(brightness);
+                // Serial.println(link_strength);
                 // Serial.println(link_matrix[i][j][k].get_max_brightness());
             }
         }
@@ -157,7 +165,7 @@ void loop() {
         else
         {
             mlp.forward_pass(x_train_matrix[instance], y_train_vec[instance]);
-            update_pulsar_brightnesses();
+            update_pulsar_brightnesses(x_train_matrix[instance]);
             mlp.backwards_pass(x_train_matrix[instance], y_train_vec[instance]);
             cost += mlp.get_cost();
             ++instance;
@@ -188,7 +196,8 @@ void loop() {
 
 
 #ifdef DEBUG
-    Serial.println(error);
+    if (error != "")
+        Serial.println(error);
 #endif
     // delay(1);
 }
