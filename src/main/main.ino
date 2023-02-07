@@ -46,11 +46,11 @@ MLP mlp{};
 void update_pulsar_brightnesses(const StaticVec<float, MAX_NODES> inputs)
 {
     MinMaxValues values = get_abs_minmaxes(mlp);
-    Serial.println(values.link_min);
-    Serial.println(values.link_max);
-    Serial.println(values.node_min);
-    Serial.println(values.node_max);
-    Serial.println();
+    // Serial.println(values.link_min);
+    // Serial.println(values.link_max);
+    // Serial.println(values.node_min);
+    // Serial.println(values.node_max);
+    // Serial.println();
 
     float brightness = minmax_scale(abs(inputs[0]), 0, X0_TRAIN_MAX, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
     input1_node.set_max_brightness(brightness);
@@ -156,22 +156,21 @@ void loop() {
     {
         i = 0;
         if (instance == TRAIN_DATA_SZ)
+            instance = 0;
+        if (instance % 20 == 0)
         {
             Serial.print("cost =");
             Serial.println(cost);
             cost = 0;
-            instance = 0;
         }
-        else
-        {
-            mlp.forward_pass(x_train_matrix[instance], y_train_vec[instance]);
-            update_pulsar_brightnesses(x_train_matrix[instance]);
-            mlp.backwards_pass(x_train_matrix[instance], y_train_vec[instance]);
-            cost += mlp.get_cost();
-            ++instance;
-        }
+        mlp.forward_pass(x_train_matrix[instance], y_train_vec[instance]);
+        update_pulsar_brightnesses(x_train_matrix[instance]);
+        mlp.backwards_pass(x_train_matrix[instance], y_train_vec[instance]);
+        cost += mlp.get_cost();
+
         input1_node.init_pulse();
         input2_node.init_pulse();
+        ++instance;
     }
 
 
