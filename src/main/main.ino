@@ -47,10 +47,10 @@ void update_pulsar_brightnesses()
 {
     MinMaxValues values = get_min_max_values(mlp);
     // input1 and 2 !!!
-    for (int i{0}; i<link_matrix.size(); ++i)
+    for (int i{0}; i<node_matrix.size(); ++i)
     {
         const StaticVec<Node, MAX_NODES>& nodes = mlp.get_layer(i).get_nodes();
-        for (int j{0}; j<link_matrix[i].size(); ++j)
+        for (int j{0}; j<node_matrix[i].size(); ++j)
         {
             const Node& node = nodes[j];
             float output = node.get_output();
@@ -99,17 +99,19 @@ void setup() {
     node_matrix[2][0] = NodePulsar{col3, center, 2};
 
 
-    link_matrix.push_back(StaticVec<StaticVec<LinkPulsar, MAX_LINKS>, MAX_NODES>{2});
-    link_matrix[0][0] = StaticVec<LinkPulsar, MAX_LINKS>{3};
-    link_matrix[0][1] = StaticVec<LinkPulsar, MAX_LINKS>{3};
+    link_matrix.push_back(StaticVec<StaticVec<LinkPulsar, MAX_LINKS>, MAX_NODES>{3});
+    link_matrix[0][0] = StaticVec<LinkPulsar, MAX_LINKS>{2};
+    link_matrix[0][1] = StaticVec<LinkPulsar, MAX_LINKS>{2};
+    link_matrix[0][2] = StaticVec<LinkPulsar, MAX_LINKS>{2};
 
     link_nodes(&input1_node, &node_matrix[0][0], &link_matrix[0][0][0]);
-    link_nodes(&input1_node, &node_matrix[0][1], &link_matrix[0][0][1]);
-    link_nodes(&input1_node, &node_matrix[0][2], &link_matrix[0][0][2]);
+    link_nodes(&input2_node, &node_matrix[0][0], &link_matrix[0][0][1]);
 
-    link_nodes(&input2_node, &node_matrix[0][0], &link_matrix[0][1][0]);
+    link_nodes(&input1_node, &node_matrix[0][1], &link_matrix[0][1][0]);
     link_nodes(&input2_node, &node_matrix[0][1], &link_matrix[0][1][1]);
-    link_nodes(&input2_node, &node_matrix[0][2], &link_matrix[0][1][2]);
+
+    link_nodes(&input1_node, &node_matrix[0][2], &link_matrix[0][2][0]);
+    link_nodes(&input2_node, &node_matrix[0][2], &link_matrix[0][2][1]);
 
     link_matrix.push_back(StaticVec<StaticVec<LinkPulsar, MAX_LINKS>, MAX_NODES>{3});
     link_matrix[1][0] = StaticVec<LinkPulsar, MAX_LINKS>{3};
@@ -117,25 +119,23 @@ void setup() {
     link_matrix[1][2] = StaticVec<LinkPulsar, MAX_LINKS>{3};
 
     link_nodes(&node_matrix[0][0], &node_matrix[1][0], &link_matrix[1][0][0]);
-    link_nodes(&node_matrix[0][0], &node_matrix[1][1], &link_matrix[1][0][1]);
-    link_nodes(&node_matrix[0][0], &node_matrix[1][2], &link_matrix[1][0][2]);
+    link_nodes(&node_matrix[0][1], &node_matrix[1][0], &link_matrix[1][0][1]);
+    link_nodes(&node_matrix[0][2], &node_matrix[1][0], &link_matrix[1][0][2]);
 
-    link_nodes(&node_matrix[0][1], &node_matrix[1][0], &link_matrix[1][1][0]);
+    link_nodes(&node_matrix[0][0], &node_matrix[1][1], &link_matrix[1][1][0]);
     link_nodes(&node_matrix[0][1], &node_matrix[1][1], &link_matrix[1][1][1]);
-    link_nodes(&node_matrix[0][1], &node_matrix[1][2], &link_matrix[1][1][2]);
+    link_nodes(&node_matrix[0][2], &node_matrix[1][1], &link_matrix[1][1][2]);
 
-    link_nodes(&node_matrix[0][2], &node_matrix[1][0], &link_matrix[1][2][0]);
-    link_nodes(&node_matrix[0][2], &node_matrix[1][1], &link_matrix[1][2][1]);
+    link_nodes(&node_matrix[0][0], &node_matrix[1][2], &link_matrix[1][2][0]);
+    link_nodes(&node_matrix[0][1], &node_matrix[1][2], &link_matrix[1][2][1]);
     link_nodes(&node_matrix[0][2], &node_matrix[1][2], &link_matrix[1][2][2]);
 
-    link_matrix.push_back(StaticVec<StaticVec<LinkPulsar, MAX_LINKS>, MAX_NODES>{3});
-    link_matrix[2][0] = StaticVec<LinkPulsar, MAX_LINKS>{1};
-    link_matrix[2][1] = StaticVec<LinkPulsar, MAX_LINKS>{1};
-    link_matrix[2][2] = StaticVec<LinkPulsar, MAX_LINKS>{1};
+    link_matrix.push_back(StaticVec<StaticVec<LinkPulsar, MAX_LINKS>, MAX_NODES>{1});
+    link_matrix[2][0] = StaticVec<LinkPulsar, MAX_LINKS>{3};
 
     link_nodes(&node_matrix[1][0], &node_matrix[2][0], &link_matrix[2][0][0]);
-    link_nodes(&node_matrix[1][1], &node_matrix[2][0], &link_matrix[2][1][0]);
-    link_nodes(&node_matrix[1][2], &node_matrix[2][0], &link_matrix[2][2][0]);
+    link_nodes(&node_matrix[1][1], &node_matrix[2][0], &link_matrix[2][0][1]);
+    link_nodes(&node_matrix[1][2], &node_matrix[2][0], &link_matrix[2][0][2]);
 }
 
 void loop() {
@@ -166,6 +166,7 @@ void loop() {
         input2_node.init_pulse();
     }
 
+
     for (int i{0}; i<link_matrix.size(); ++i)
         for (int j{0}; j<link_matrix[i].size(); ++j)
             for (int k{0}; k<link_matrix[i][j].size(); ++k)
@@ -186,5 +187,8 @@ void loop() {
     matrix.show();
 
 
+#ifdef DEBUG
+    Serial.println(error);
+#endif
     // delay(1);
 }
