@@ -17,6 +17,13 @@ uint8_t clockPin   = 14;
 uint8_t latchPin   = 15;
 uint8_t oePin      = 16;
 
+constexpr uint8_t btn_upPin = 2;
+bool show_loss = false; // up button toggles loss
+
+constexpr uint8_t btn_downPin = 3;
+uint8_t btn_downState = HIGH;
+bool color_links = false; // down buttons colours links (no toggle)
+
 uint8_t matrix_width = 64; // total width
 uint8_t colour_depth = 5; // colour bit depth 1-6
 uint8_t matrix_num = 1; // number of matrices
@@ -41,7 +48,10 @@ NodePulsar input2_node{col0, center+6, 2};
 
 MLP mlp{};
 
-void setup_matrix_library(Adafruit_Protomatter& matrix)
+
+// ----- Helper functions for globals ------ //
+
+void setup_matrix_library()
 {
     ProtomatterStatus status = matrix.begin();
     Serial.print("Protomatter begin() status: ");
@@ -53,9 +63,7 @@ void setup_matrix_library(Adafruit_Protomatter& matrix)
     matrix.setTextColor(matrix.color565(16,16,16));
 }
 
-void construct_pulsar_matrices(
-StaticVec<StaticVec<NodePulsar, MAX_NODES>, NUM_LAYERS>&  node_matrix,
-StaticVec<StaticVec<StaticVec<LinkPulsar, MAX_LINKS>, MAX_NODES>, NUM_LAYERS>& link_matrix)
+void construct_pulsar_matrices()
 {
     node_matrix.push_back(StaticVec<NodePulsar, MAX_NODES>{3});
     node_matrix[0][0] = NodePulsar{col1, center-12, 2};
@@ -110,10 +118,10 @@ StaticVec<StaticVec<StaticVec<LinkPulsar, MAX_LINKS>, MAX_NODES>, NUM_LAYERS>& l
     link_nodes(&node_matrix[1][2], &node_matrix[2][0], &link_matrix[2][0][2]);
 }
 
-void set_pulsar_colours(
-StaticVec<StaticVec<NodePulsar, MAX_NODES>, NUM_LAYERS>&  node_matrix,
-StaticVec<StaticVec<StaticVec<LinkPulsar, MAX_LINKS>,MAX_NODES>, NUM_LAYERS>& link_matrix)
+void toggle_pulsar_colours()
 {
+    static bool color = true;
+    color = !color;
     for (int i{0}; i<node_matrix.size(); ++i)
     {
         const StaticVec<Node, MAX_NODES>& nodes = mlp.get_layer(i).get_nodes();
@@ -122,12 +130,15 @@ StaticVec<StaticVec<StaticVec<LinkPulsar, MAX_LINKS>,MAX_NODES>, NUM_LAYERS>& li
             const Node& node = nodes[j];
             for (int k{0}; k<link_matrix[i][j].size(); ++k)
             {
-                link_matrix[i][j][k].set_sat(255);
                 if (node.get_weights()[k] >= 0)
                     link_matrix[i][j][k].set_hue(HSV_RED);
                 else
                     link_matrix[i][j][k].set_hue(HSV_BLUE);
-                }
+                if (color)
+                    link_matrix[i][j][k].set_sat(255);
+                else
+                    link_matrix[i][j][k].set_sat(0);
+            }
         }
     }
 }
@@ -160,9 +171,7 @@ void update_pulsar_brightnesses(const StaticVec<float, MAX_NODES> inputs)
     }
 }
 
-void update_draw_pulsars(
-StaticVec<StaticVec<NodePulsar, MAX_NODES>, NUM_LAYERS>&  node_matrix,
-StaticVec<StaticVec<StaticVec<LinkPulsar, MAX_LINKS>,MAX_NODES>, NUM_LAYERS>& link_matrix)
+void update_draw_pulsars()
 {
     for (int i{0}; i<link_matrix.size(); ++i)
         for (int j{0}; j<link_matrix[i].size(); ++j)
@@ -183,36 +192,64 @@ StaticVec<StaticVec<StaticVec<LinkPulsar, MAX_LINKS>,MAX_NODES>, NUM_LAYERS>& li
         }
 }
 
+void check_buttons()
+{
+    static uint delay = 0;
+    if (delay)
+        --delay;
+    else
+    {
+        if (digitalRead(btn_upPin) == LOW)
+        {
+            matrix.fillRect(50, 26, 14, 5, 0);
+            show_loss = !show_loss;
+            delay = 100;
+        }
+        if (digitalRead(btn_downPin) == LOW)
+        {
+            toggle_pulsar_colours();
+            delay = 100;
+        }
+    }
+}
+
+
+// ----- Main setup and loop ------ //
+
 void setup() {
 
-    Serial.begin(9600); // transmit to serial port @ 9600 bits per second
+    Serial.begin(9600); 
 
-    setup_matrix_library(matrix);
+    setup_matrix_library();
+    pinMode(btn_upPin, INPUT_PULLUP);
+    pinMode(btn_downPin, INPUT_PULLUP);
 
     x_train_matrix = populate_x_train(raw_x_train);
     y_train_vec = populate_y_train(raw_y_train);
 
     randomSeed(analogRead(0));
     mlp.init_weights();
-    construct_pulsar_matrices(node_matrix, link_matrix);
-    // set_pulsar_colours(node_matrix, link_matrix);
+    construct_pulsar_matrices();
 }
 
+
 void loop() {
+    check_buttons();
     static float cost = 0;
     static int i = 0;
     static uint clock = 0;
-    // ++i;
-    // if (i == 1000)
-    // {
-    //     i = 0;
-        if (clock % TRAIN_DATA_SZ == 0)
+    ++i;
+    if (i == 1000)
+    {
+        i = 0;
+        if (clock % 20 == 0)
         {
-            matrix.fillRect(50, 26, 14, 5, 0);
-            matrix.setCursor(50, 30);
-            matrix.print(cost);
-            Serial.print("cost =");
-            Serial.println(cost);
+            if (show_loss)
+            {
+                matrix.fillRect(51, 27, 14, 5, 0);
+                matrix.setCursor(51, 31);
+                matrix.print(cost);
+            }
             cost = 0;
             clock = 0;
         }
@@ -222,12 +259,12 @@ void loop() {
         mlp.backwards_pass(x_train_matrix[instance], y_train_vec[instance]);
         cost += mlp.get_cost();
 
-        // input1_node.init_pulse();
-        // input2_node.init_pulse();
+        input1_node.init_pulse();
+        input2_node.init_pulse();
         ++clock;
-    // }
+    }
     
-    // update_draw_pulsars(node_matrix, link_matrix);
+    update_draw_pulsars();
 
     matrix.show();
 
