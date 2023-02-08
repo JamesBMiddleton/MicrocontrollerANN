@@ -1,4 +1,5 @@
 #include <Adafruit_Protomatter.h>
+#include <Fonts/Picopixel.h>
 #include "pulsar.h"
 #include "perceptron.h"
 #include "data.h"
@@ -26,8 +27,6 @@ Adafruit_Protomatter matrix{matrix_width, colour_depth, matrix_num, rgbPins,
                             row_addr_lines, addrPins, clockPin, latchPin,
                             oePin, double_buffer};
 
-constexpr uint16_t hsv_red = 0;
-constexpr uint16_t hsv_blue = 21840;
 constexpr uint8_t center = 15;
 constexpr uint8_t col0 = 4;
 constexpr uint8_t col1 = 22;
@@ -42,57 +41,22 @@ NodePulsar input2_node{col0, center+6, 2};
 
 MLP mlp{};
 
-
-void update_pulsar_brightnesses(const StaticVec<float, MAX_NODES> inputs)
+void setup_matrix_library(Adafruit_Protomatter& matrix)
 {
-    MinMaxValues values = get_abs_minmaxes(mlp);
-    // Serial.println(values.link_min);
-    // Serial.println(values.link_max);
-    // Serial.println(values.node_min);
-    // Serial.println(values.node_max);
-    // Serial.println();
-
-    float brightness = minmax_scale(abs(inputs[0]), 0, X0_TRAIN_MAX, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
-    input1_node.set_max_brightness(brightness);
-    brightness = minmax_scale(abs(inputs[1]), 0, X1_TRAIN_MAX, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
-    input2_node.set_max_brightness(brightness);
-    for (int i{0}; i<node_matrix.size(); ++i)
-    {
-        const StaticVec<Node, MAX_NODES>& nodes = mlp.get_layer(i).get_nodes();
-        for (int j{0}; j<node_matrix[i].size(); ++j)
-        {
-            const Node& node = nodes[j];
-            float output = node.get_output();
-            brightness = minmax_scale(abs(output), values.node_min, values.node_max, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
-            node_matrix[i][j].set_max_brightness(brightness);
-            for (int k{0}; k<link_matrix[i][j].size(); ++k)
-            {
-                float link_strength = node.get_weights()[k] * node.get_inputs()[k];
-                brightness = minmax_scale(abs(link_strength), values.link_min, values.link_max, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
-                link_matrix[i][j][k].set_max_brightness(brightness);
-                // Serial.println(link_strength);
-                // Serial.println(link_matrix[i][j][k].get_max_brightness());
-            }
-        }
-    }
-}
-
-void setup() {
-
-    Serial.begin(9600); // transmit to serial port @ 9600 bits per second
-
     ProtomatterStatus status = matrix.begin();
     Serial.print("Protomatter begin() status: ");
     Serial.println((int)status);
     if(status != PROTOMATTER_OK)
         for(;;);
 
-    x_train_matrix = populate_x_train();
-    y_train_vec = populate_y_train();
+    matrix.setFont(&Picopixel);
+    matrix.setTextColor(matrix.color565(16,16,16));
+}
 
-    randomSeed(analogRead(0));
-    mlp.init_weights();
-
+void construct_pulsar_matrices(
+StaticVec<StaticVec<NodePulsar, MAX_NODES>, NUM_LAYERS>&  node_matrix,
+StaticVec<StaticVec<StaticVec<LinkPulsar, MAX_LINKS>, MAX_NODES>, NUM_LAYERS>& link_matrix)
+{
     node_matrix.push_back(StaticVec<NodePulsar, MAX_NODES>{3});
     node_matrix[0][0] = NodePulsar{col1, center-12, 2};
     node_matrix[0][1] = NodePulsar{col1, center, 2};
@@ -146,34 +110,60 @@ void setup() {
     link_nodes(&node_matrix[1][2], &node_matrix[2][0], &link_matrix[2][0][2]);
 }
 
-void loop() {
-
-    static int instance = 0;
-    static float cost = 0;
-    static int i = 0;
-    ++i;
-    if (i == 1000)
+void set_pulsar_colours(
+StaticVec<StaticVec<NodePulsar, MAX_NODES>, NUM_LAYERS>&  node_matrix,
+StaticVec<StaticVec<StaticVec<LinkPulsar, MAX_LINKS>,MAX_NODES>, NUM_LAYERS>& link_matrix)
+{
+    for (int i{0}; i<node_matrix.size(); ++i)
     {
-        i = 0;
-        if (instance == TRAIN_DATA_SZ)
-            instance = 0;
-        if (instance % 20 == 0)
+        const StaticVec<Node, MAX_NODES>& nodes = mlp.get_layer(i).get_nodes();
+        for (int j{0}; j<node_matrix[i].size(); ++j)
         {
-            Serial.print("cost =");
-            Serial.println(cost);
-            cost = 0;
+            const Node& node = nodes[j];
+            for (int k{0}; k<link_matrix[i][j].size(); ++k)
+            {
+                link_matrix[i][j][k].set_sat(255);
+                if (node.get_weights()[k] >= 0)
+                    link_matrix[i][j][k].set_hue(HSV_RED);
+                else
+                    link_matrix[i][j][k].set_hue(HSV_BLUE);
+                }
         }
-        mlp.forward_pass(x_train_matrix[instance], y_train_vec[instance]);
-        update_pulsar_brightnesses(x_train_matrix[instance]);
-        mlp.backwards_pass(x_train_matrix[instance], y_train_vec[instance]);
-        cost += mlp.get_cost();
-
-        input1_node.init_pulse();
-        input2_node.init_pulse();
-        ++instance;
     }
+}
 
+void update_pulsar_brightnesses(const StaticVec<float, MAX_NODES> inputs)
+{
+    MinMaxValues values = get_abs_minmaxes(mlp);
 
+    float brightness = minmax_scale(abs(inputs[0]), 0, X0_TRAIN_MAX, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
+    input1_node.set_max_brightness(brightness);
+    brightness = minmax_scale(abs(inputs[1]), 0, X1_TRAIN_MAX, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
+    input2_node.set_max_brightness(brightness);
+    for (int i{0}; i<node_matrix.size(); ++i)
+    {
+        const StaticVec<Node, MAX_NODES>& nodes = mlp.get_layer(i).get_nodes();
+        for (int j{0}; j<node_matrix[i].size(); ++j)
+        {
+            const Node& node = nodes[j];
+            float output = node.get_output();
+            brightness = minmax_scale(output, values.node_min, values.node_max, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
+            node_matrix[i][j].set_max_brightness(brightness);
+            for (int k{0}; k<link_matrix[i][j].size(); ++k)
+            {
+                float link_strength = node.get_weights()[k] * node.get_inputs()[k];
+                brightness = minmax_scale(abs(link_strength), values.link_min, values.link_max, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
+                link_matrix[i][j][k].set_max_brightness(brightness);
+                // Serial.println(link_matrix[i][j][k].get_max_brightness());
+            }
+        }
+    }
+}
+
+void update_draw_pulsars(
+StaticVec<StaticVec<NodePulsar, MAX_NODES>, NUM_LAYERS>&  node_matrix,
+StaticVec<StaticVec<StaticVec<LinkPulsar, MAX_LINKS>,MAX_NODES>, NUM_LAYERS>& link_matrix)
+{
     for (int i{0}; i<link_matrix.size(); ++i)
         for (int j{0}; j<link_matrix[i].size(); ++j)
             for (int k{0}; k<link_matrix[i][j].size(); ++k)
@@ -191,6 +181,54 @@ void loop() {
             node_matrix[i][j].update();
             node_matrix[i][j].draw();
         }
+}
+
+void setup() {
+
+    Serial.begin(9600); // transmit to serial port @ 9600 bits per second
+
+    setup_matrix_library(matrix);
+
+    x_train_matrix = populate_x_train(raw_x_train);
+    y_train_vec = populate_y_train(raw_y_train);
+
+    randomSeed(analogRead(0));
+    mlp.init_weights();
+    construct_pulsar_matrices(node_matrix, link_matrix);
+    // set_pulsar_colours(node_matrix, link_matrix);
+}
+
+void loop() {
+    static float cost = 0;
+    static int i = 0;
+    static uint clock = 0;
+    // ++i;
+    // if (i == 1000)
+    // {
+    //     i = 0;
+        if (clock % TRAIN_DATA_SZ == 0)
+        {
+            matrix.fillRect(50, 26, 14, 5, 0);
+            matrix.setCursor(50, 30);
+            matrix.print(cost);
+            Serial.print("cost =");
+            Serial.println(cost);
+            cost = 0;
+            clock = 0;
+        }
+        float instance = random(TRAIN_DATA_SZ); 
+        mlp.forward_pass(x_train_matrix[instance], y_train_vec[instance]);
+        update_pulsar_brightnesses(x_train_matrix[instance]);
+        mlp.backwards_pass(x_train_matrix[instance], y_train_vec[instance]);
+        cost += mlp.get_cost();
+
+        // input1_node.init_pulse();
+        // input2_node.init_pulse();
+        ++clock;
+    // }
+    
+    // update_draw_pulsars(node_matrix, link_matrix);
+
     matrix.show();
 
 

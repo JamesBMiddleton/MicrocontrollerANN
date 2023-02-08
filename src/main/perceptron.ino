@@ -1,6 +1,6 @@
 
 Node::Node(const uint8_t& n_inputs)
-    :_learning_rate{0.001}, _bias{0}, _prev_output{0}
+    :_learning_rate{0.00001}, _bias{0}, _prev_output{0}
 {
     for (int i{0}; i < n_inputs; ++i)
         _weights.push_back(0);

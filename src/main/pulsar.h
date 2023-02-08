@@ -6,6 +6,8 @@
 constexpr uint8_t MAX_LINKS = 3;
 constexpr uint8_t MAX_BRIGHTNESS = 254;
 constexpr uint8_t MIN_BRIGHTNESS = 9;
+constexpr uint16_t HSV_RED = 0;
+constexpr uint16_t HSV_BLUE = 21840;
 
 class Pulsar
 {
@@ -17,6 +19,8 @@ public:
     const float& get_brightness() const { return _brightness; }
     const uint8_t& get_max_brightness() const { return _max_brightness; }
     const bool& is_pulsing() const { return _is_pulsing; }
+    void set_hue(const uint16_t& hue) { _hue = hue; } 
+    void set_sat(const uint16_t& sat) { _sat = sat; }
 protected:
     bool _is_pulsing;
     uint8_t _pulse_timer;
@@ -26,6 +30,8 @@ protected:
     uint8_t _max_brightness;
     float _brightness;
     float _bright_step;
+    uint16_t _hue;
+    uint16_t _sat;
 };
 
 

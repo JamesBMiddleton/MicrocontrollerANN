@@ -2,7 +2,7 @@ Pulsar::Pulsar()
     :_is_pulsing{false}, _pulse_timer{0}, _pulse_length{120}, _pulse_step{1},
     _relay_threshold{(uint8_t)(_pulse_length/2)}, _max_brightness{MAX_BRIGHTNESS},
     _brightness{MIN_BRIGHTNESS},
-    _bright_step{(_max_brightness - _brightness) / _pulse_length} 
+    _bright_step{(_max_brightness - _brightness) / _pulse_length}, _hue{0}, _sat{0} 
 {}
 
 void Pulsar::update()
@@ -38,7 +38,7 @@ NodePulsar::NodePulsar(const uint8_t& x, const uint8_t& y,
 
 void NodePulsar::draw()
 {
-    matrix.fillCircle(_x, _y, _radius, matrix.colorHSV(0, 0, _brightness));
+    matrix.fillCircle(_x, _y, _radius, matrix.colorHSV(_hue, _sat, _brightness));
 }
 
 void NodePulsar::update()
@@ -71,7 +71,7 @@ void LinkPulsar::update()
 
 void LinkPulsar::draw()
 {
-    matrix.drawLine(_x1, _y1, _x2, _y2, matrix.colorHSV(0, 0, _brightness));
+    matrix.drawLine(_x1, _y1, _x2, _y2, matrix.colorHSV(_hue, _sat, _brightness));
 }
 
 

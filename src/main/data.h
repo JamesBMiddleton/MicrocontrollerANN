@@ -14,26 +14,29 @@ float raw_y_train[TRAIN_DATA_SZ]{0.087227,0.647975,0.186916,0.797508,0.728972,0.
 StaticVec<StaticVec<float, MAX_NODES>, TRAIN_DATA_SZ> x_train_matrix;
 StaticVec<float, TRAIN_DATA_SZ> y_train_vec;
 
-StaticVec<StaticVec<float, MAX_NODES>, TRAIN_DATA_SZ> populate_x_train()
+StaticVec<StaticVec<float, MAX_NODES>, TRAIN_DATA_SZ> populate_x_train(float* raw_x_train)
 {
     StaticVec<StaticVec<float, MAX_NODES>, TRAIN_DATA_SZ> matrix;
     int total_values = TRAIN_DATA_SZ * 2;
     for (int i{0}; i < total_values;)
     {
         StaticVec<float, MAX_NODES> vec;
-        vec.push_back(raw_x_train[i++]);
-        vec.push_back(raw_x_train[i++]);
+        vec.push_back(*raw_x_train++);
+        ++i;
+        vec.push_back(*raw_x_train++);
+        ++i;
         matrix.push_back(vec);
     }
     return matrix;
 }
 
-StaticVec<float, TRAIN_DATA_SZ> populate_y_train()
+StaticVec<float, TRAIN_DATA_SZ> populate_y_train(float* raw_y_train)
 {
     StaticVec<float, TRAIN_DATA_SZ> vec;
     for (int i{0}; i < TRAIN_DATA_SZ; ++i)
-        vec.push_back(raw_y_train[i]);
+        vec.push_back(*raw_y_train++);
     return vec;
 }
 
 #endif
+  
