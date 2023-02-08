@@ -18,7 +18,7 @@ uint8_t latchPin   = 15;
 uint8_t oePin      = 16;
 
 constexpr uint8_t btn_upPin = 2;
-bool show_loss = false; // up button toggles loss
+bool show_loss = true; // up button toggles loss
 
 constexpr uint8_t btn_downPin = 3;
 uint8_t btn_downState = HIGH;
@@ -147,9 +147,9 @@ void update_pulsar_brightnesses(const StaticVec<float, MAX_NODES> inputs)
 {
     MinMaxValues values = get_abs_minmaxes(mlp);
 
-    float brightness = minmax_scale(abs(inputs[0]), 0, X0_TRAIN_MAX, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
+    float brightness = minmax_scale(abs(inputs[0]), X0_TRAIN_MIN, X0_TRAIN_MAX, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
     input1_node.set_max_brightness(brightness);
-    brightness = minmax_scale(abs(inputs[1]), 0, X1_TRAIN_MAX, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
+    brightness = minmax_scale(abs(inputs[1]), X1_TRAIN_MIN, X1_TRAIN_MAX, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
     input2_node.set_max_brightness(brightness);
     for (int i{0}; i<node_matrix.size(); ++i)
     {
@@ -235,6 +235,7 @@ void setup() {
 
 void loop() {
     check_buttons();
+    static float lowest_cost = 100000; // !
     static float cost = 0;
     static int i = 0;
     static uint clock = 0;
@@ -242,13 +243,16 @@ void loop() {
     if (i == 1000)
     {
         i = 0;
+        ++clock;
         if (clock % 20 == 0)
         {
+            if (cost < lowest_cost)
+                lowest_cost = cost;
             if (show_loss)
             {
                 matrix.fillRect(51, 27, 14, 5, 0);
                 matrix.setCursor(51, 31);
-                matrix.print(cost);
+                matrix.print(lowest_cost);
             }
             cost = 0;
             clock = 0;
@@ -261,9 +265,8 @@ void loop() {
 
         input1_node.init_pulse();
         input2_node.init_pulse();
-        ++clock;
     }
-    
+
     update_draw_pulsars();
 
     matrix.show();

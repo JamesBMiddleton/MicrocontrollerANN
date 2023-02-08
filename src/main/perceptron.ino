@@ -1,6 +1,7 @@
 
 Node::Node(const uint8_t& n_inputs)
-    :_learning_rate{0.00001}, _bias{0}, _prev_output{0}
+    :_learning_rate{0.0001}, _lr_decay_counter{0}, 
+    _lr_decay_threshold{TRAIN_DATA_SZ}, _bias{0}, _prev_output{0}
 {
     for (int i{0}; i < n_inputs; ++i)
         _weights.push_back(0);
@@ -12,6 +13,18 @@ void Node::init_weights()
     for (uint8_t i{0}; i < _weights.size(); ++i)
         _weights[i] = random_decimal();
 }
+
+void Node::update_learning_rate()
+{
+    ++_lr_decay_counter;
+    if (_lr_decay_counter == _lr_decay_threshold)
+    {
+        _lr_decay_counter = 0;
+        _learning_rate = _learning_rate * 0.8; // !!!
+        Serial.println(_learning_rate * 100000);
+    }
+}
+
 
 float Node::forward_pass(const StaticVec<float, MAX_NODES>& inputs)
 {
@@ -45,6 +58,7 @@ StaticVec<float, MAX_NODES> Node::backwards_pass(const StaticVec<float, MAX_NODE
     }
     float bias_grad = _prev_output * (1 - _prev_output);
     _bias = _bias - (_learning_rate * bias_grad);
+    this->update_learning_rate();
     return input_grads;
 }
 

@@ -21,6 +21,7 @@ public:
     Node(){}; // bad practice?
     Node(const uint8_t& n_inputs);
     void init_weights();
+    void update_learning_rate();
     float forward_pass(const StaticVec<float, MAX_NODES>& inputs);
     StaticVec<float, MAX_NODES>
     backwards_pass(const StaticVec<float, MAX_NODES>& inputs,
@@ -34,6 +35,8 @@ public:
 
 private:
     float _learning_rate;
+    uint _lr_decay_counter;
+    uint _lr_decay_threshold;
     float _bias;
     float _prev_output;
     StaticVec<float, MAX_NODES> _prev_inputs;
