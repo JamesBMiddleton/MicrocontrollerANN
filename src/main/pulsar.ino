@@ -1,5 +1,6 @@
 Pulsar::Pulsar()
-    :_is_pulsing{false}, _pulse_timer{0}, _pulse_length{120}, _pulse_step{1},
+    :_is_f_pulsing{false}, _is_b_pulsing{false}, _pulse_timer{0}, 
+    _pulse_length{120}, _pulse_step{1},
     _relay_threshold{(uint8_t)(_pulse_length/2)}, _max_brightness{MAX_BRIGHTNESS},
     _brightness{MIN_BRIGHTNESS},
     _bright_step{(_max_brightness - _brightness) / _pulse_length}, _hue{0}, _sat{0} 
@@ -11,7 +12,8 @@ void Pulsar::update()
     _brightness += _bright_step; // sacrificing memory for performance.
     if (_pulse_timer == 0) 
     {
-        _is_pulsing = false;
+        _is_f_pulsing = false;
+        _is_b_pulsing = false;
         _pulse_step = -_pulse_step;
         _bright_step = -_bright_step;
     }
@@ -24,7 +26,7 @@ void Pulsar::update()
 
 void Pulsar::set_max_brightness(const uint8_t& new_max)
 {
-    if (_is_pulsing)
+    if (_is_f_pulsing || _is_b_pulsing)
         Serial.println("ERROR: max brightness set during pulse.");
     _max_brightness = new_max;
     _bright_step = (_max_brightness - _brightness) / _pulse_length;
@@ -43,12 +45,19 @@ void NodePulsar::draw()
 
 void NodePulsar::update()
 {
-    if (_is_pulsing)
+    if (_is_f_pulsing)
     {
         Pulsar::update();
         if (_pulse_timer == _relay_threshold && _pulse_step > 0)
             for (uint8_t i{0}; i<_f_links.size(); ++i)
-                _f_links[i]->init_pulse();
+                _f_links[i]->init_f_pulse();
+    }
+    if (_is_b_pulsing)
+    {
+        Pulsar::update();
+        if (_pulse_timer == _relay_threshold && _pulse_step > 0)
+            for (uint8_t i{0}; i<_b_links.size(); ++i)
+                _b_links[i]->init_b_pulse();
     }
 }
 
@@ -61,11 +70,17 @@ LinkPulsar::LinkPulsar(const uint8_t& x1, const uint8_t& y1,
 
 void LinkPulsar::update()
 {
-    if (_is_pulsing)
+    if (_is_f_pulsing)
     {
         Pulsar::update();
         if (_pulse_timer == _relay_threshold && _pulse_step > 0)
-            _forward_node->init_pulse();
+            _forward_node->init_f_pulse();
+    }
+    if (_is_b_pulsing)
+    {
+        Pulsar::update();
+        if (_pulse_timer == _relay_threshold && _pulse_step > 0)
+            _backward_node->init_b_pulse();
     }
 }
 

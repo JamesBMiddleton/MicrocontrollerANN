@@ -14,15 +14,18 @@ class Pulsar
 public:
     Pulsar(); 
     void update();
-    void init_pulse() { _is_pulsing = true;}
+    void init_f_pulse() { _is_f_pulsing = true; }
+    void init_b_pulse() { _is_b_pulsing = true; }
     void set_max_brightness(const uint8_t& max);
     const float& get_brightness() const { return _brightness; }
     const uint8_t& get_max_brightness() const { return _max_brightness; }
-    const bool& is_pulsing() const { return _is_pulsing; }
+    const bool& is_f_pulsing() const { return _is_f_pulsing; }
+    const bool& is_b_pulsing() const { return _is_b_pulsing; }
     void set_hue(const uint16_t& hue) { _hue = hue; } 
     void set_sat(const uint16_t& sat) { _sat = sat; }
 protected:
-    bool _is_pulsing;
+    bool _is_f_pulsing;
+    bool _is_b_pulsing;
     uint8_t _pulse_timer;
     uint8_t _pulse_length;
     uint8_t _pulse_step;

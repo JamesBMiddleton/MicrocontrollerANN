@@ -8,7 +8,6 @@ constexpr uint8_t NUM_LAYERS = 3;
 constexpr uint BATCH_SIZE = 32;
 
 struct MinMaxValues
-// 'node' = z_sum, 'link' = input * weight
 {
     float node_min;
     float node_max;
@@ -29,6 +28,7 @@ public:
     const float& get_output() const { return _prev_output; }
     const StaticVec<float, MAX_NODES>& get_weights() const { return _weights; }
     const StaticVec<float, MAX_NODES>& get_inputs() const { return _prev_inputs; }
+    const StaticVec<float, MAX_NODES>& get_weight_grads() const { return _prev_weight_avg_grads; }
 
 private:
     void update_learning_rate();
@@ -41,6 +41,7 @@ private:
     StaticVec<float, MAX_NODES> _prev_inputs;
     StaticVec<float, MAX_NODES> _weights;
     StaticVec<StaticVec<float, BATCH_SIZE>, MAX_NODES> _weight_grads;
+    StaticVec<float, MAX_NODES> _prev_weight_avg_grads;
     StaticVec<float, BATCH_SIZE> _bias_grads;
 };
 

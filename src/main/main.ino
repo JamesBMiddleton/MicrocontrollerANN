@@ -5,7 +5,7 @@
 #include "data.h"
 #include "static_vec.h"
 
-#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 String error = "";
@@ -143,9 +143,9 @@ void toggle_pulsar_colours()
     }
 }
 
-void update_pulsar_brightnesses(const StaticVec<float, MAX_NODES> inputs)
+void update_pulsar_brightness_forward(const StaticVec<float, MAX_NODES> inputs)
 {
-    MinMaxValues values = get_abs_minmaxes(mlp);
+    MinMaxValues values = get_abs_minmaxes_forward(mlp);
 
     float brightness = minmax_scale(abs(inputs[0]), X0_TRAIN_MIN, X0_TRAIN_MAX, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
     input1_node.set_max_brightness(brightness);
@@ -170,6 +170,32 @@ void update_pulsar_brightnesses(const StaticVec<float, MAX_NODES> inputs)
         }
     }
 }
+
+void update_pulsar_brightness_backward()
+{
+    MinMaxValues values = get_abs_minmaxes_backward(mlp);
+    input1_node.set_max_brightness(MIN_BRIGHTNESS);
+    input2_node.set_max_brightness(MIN_BRIGHTNESS);
+    for (int i{0}; i<node_matrix.size(); ++i)
+    {
+        const StaticVec<Node, MAX_NODES>& nodes = mlp.get_layer(i).get_nodes();
+        for (int j{0}; j<node_matrix[i].size(); ++j)
+        {
+            const Node& node = nodes[j];
+            float grad_sum = 0;
+            for (int k{0}; k<link_matrix[i][j].size(); ++k)
+            {
+                float weight_grad = node.get_weight_grads()[k];
+                float brightness = minmax_scale(abs(weight_grad), values.link_min, values.link_max, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
+                link_matrix[i][j][k].set_max_brightness(brightness);
+                grad_sum += weight_grad;
+            }
+            float brightness = minmax_scale(abs(grad_sum), values.node_min, values.node_max, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
+            node_matrix[i][j].set_max_brightness(brightness);
+        }
+    }
+}
+
 
 void update_draw_pulsars()
 {
@@ -232,6 +258,20 @@ void check_buttons()
 }
 
 
+void print_cost(const float& cost)
+{
+    static float lowest_cost = 100000; // !
+    if (cost < lowest_cost)
+        lowest_cost = cost;
+    if (show_loss)
+    {
+        matrix.fillRect(51, 27, 14, 5, 0);
+        matrix.setCursor(51, 31);
+        matrix.print(lowest_cost);
+    }
+}
+
+
 // ----- Main setup and loop ------ //
 
 void setup() {
@@ -253,39 +293,40 @@ void setup() {
 
 void loop() {
     check_buttons();
-    static float lowest_cost = 100000; // !
     static float cost = 0;
-    static int i = 0;
     static uint instance = 0;
-    // ++i;
-    // if (i == 1000)
-    // {
-    //     i = 0;
+    static int i = 0;
+    if (i++ == 1000)
+    {
+        i = 0;
         ++instance;
         if (instance == TRAIN_DATA_SZ)
         {
             instance = 0;
             shuffle_data(x_train_matrix, y_train_vec);
-            if (cost < lowest_cost)
-                lowest_cost = cost;
-            if (show_loss)
-            {
-                matrix.fillRect(51, 27, 14, 5, 0);
-                matrix.setCursor(51, 31);
-                matrix.print(cost);
-            }
-            cost = 0;
         }
+
         mlp.forward_pass(x_train_matrix[instance], y_train_vec[instance]);
-        update_pulsar_brightnesses(x_train_matrix[instance]);
+        update_pulsar_brightness_forward(x_train_matrix[instance]);
         mlp.backwards_pass(x_train_matrix[instance], y_train_vec[instance]);
         cost += mlp.get_cost();
 
-        // input1_node.init_pulse();
-        // input2_node.init_pulse();
-    // }
-    //
-    // update_draw_pulsars();
+
+        if (instance % BATCH_SIZE == 0)
+        {
+            print_cost(cost * 100); // *100 for more precision in viz
+            cost = 0;
+            update_pulsar_brightness_backward();
+            node_matrix[2][0].init_b_pulse();
+        }
+        else
+        {
+            input1_node.init_f_pulse();
+            input2_node.init_f_pulse();
+        }
+    }
+
+    update_draw_pulsars();
 
     matrix.show();
 
@@ -294,5 +335,4 @@ void loop() {
     if (error != "")
         Serial.println(error);
 #endif
-    // delay(1);
 }

@@ -2,7 +2,7 @@
 Node::Node(const uint8_t& n_inputs)
     :_learning_rate{0.01}, _lr_decay_counter{0}, 
     _lr_decay_threshold{TRAIN_DATA_SZ}, _bias{0}, _prev_output{0},
-    _weight_grads{n_inputs}, _bias_grads{}
+    _weight_grads{n_inputs}, _prev_weight_avg_grads{n_inputs}, _bias_grads{}
 {
     for (int i{0}; i < n_inputs; ++i)
         _weights.push_back(0);
@@ -25,7 +25,6 @@ void Node::update_learning_rate()
         _learning_rate = _learning_rate / 2;
         _lr_decay_counter = 0;
     }
-    Serial.println(_learning_rate * 1000);
 }
 
 void Node::take_step()
@@ -36,6 +35,7 @@ void Node::take_step()
         for (int j{0}; j < _weight_grads[i].size(); ++j)
             avg_weight_grad += _weight_grads[i][j];
         avg_weight_grad = avg_weight_grad / (float)_weight_grads[i].size();
+        _prev_weight_avg_grads[i] = avg_weight_grad;
         _weights[i] = _weights[i] - (_learning_rate * avg_weight_grad);
         _weight_grads[i].clear();
     }
@@ -175,8 +175,9 @@ float minmax_scale(const float& x, const float& x_min, const float& x_max, const
     return MIN_BRIGHTNESS + (((x - x_min) * (new_max - new_min)) / (x_max - x_min));
 }
 
-MinMaxValues get_abs_minmaxes(const MLP& mlp)
-// absolute min_max values
+MinMaxValues get_abs_minmaxes_forward(const MLP& mlp)
+// absolute min_max values for forward pass
+// 'node' = z_sum, 'link' = input * weight
 {
     MinMaxValues values;
     const Node& temp = mlp.get_layer(0).get_nodes()[0];
@@ -204,6 +205,45 @@ MinMaxValues get_abs_minmaxes(const MLP& mlp)
                 if (link_strength < values.link_min)
                     values.link_min = link_strength;
             }
+        }
+    }
+    return values;
+}
+
+MinMaxValues get_abs_minmaxes_backward(const MLP& mlp)
+// absolute min_max values for back pass
+// 'node' = sum of weight_grads, 'link' = weight_grads
+{
+    MinMaxValues values;
+    const Node& temp = mlp.get_layer(0).get_nodes()[0];
+    values.link_min = abs(temp.get_weight_grads()[0]);
+    values.link_max = abs(temp.get_weight_grads()[0]);
+    float grad_sum = 0;
+    for (int i{0}; i < temp.get_weight_grads().size(); ++i)
+        grad_sum += temp.get_weight_grads()[i];
+    values.node_min = abs(grad_sum);
+    values.node_max = abs(grad_sum);
+
+    for (int i{0}; i < NUM_LAYERS; ++i)
+    {
+        const StaticVec<Node, MAX_NODES>& nodes = mlp.get_layer(i).get_nodes();
+        for (int j{0}; j < nodes.size(); ++j)
+        {
+            const Node& node = nodes[j];
+            float grad_sum = 0;
+            for (int k{0}; k < node.get_weights().size(); ++k)
+            {
+                float weight_grad = abs(node.get_weight_grads()[k]);
+                if (weight_grad > values.link_max)
+                    values.link_max = weight_grad;
+                if (weight_grad < values.link_min)
+                    values.link_min = weight_grad;
+                grad_sum += weight_grad;
+            }
+            if (grad_sum > values.node_max)
+                values.node_max = grad_sum;
+            if (grad_sum < values.node_min)
+                values.node_min = grad_sum;
         }
     }
     return values;
