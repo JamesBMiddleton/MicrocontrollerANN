@@ -1,7 +1,8 @@
 
 Node::Node(const uint8_t& n_inputs)
-    :_learning_rate{0.0001}, _lr_decay_counter{0}, 
-    _lr_decay_threshold{TRAIN_DATA_SZ}, _bias{0}, _prev_output{0}
+    :_learning_rate{0.01}, _lr_decay_counter{0}, 
+    _lr_decay_threshold{TRAIN_DATA_SZ}, _bias{0}, _prev_output{0},
+    _weight_grads{n_inputs}, _bias_grads{}
 {
     for (int i{0}; i < n_inputs; ++i)
         _weights.push_back(0);
@@ -15,14 +16,36 @@ void Node::init_weights()
 }
 
 void Node::update_learning_rate()
+// half the learning rate every epoch
+// simple but seems to work better than exponential decay?
 {
     ++_lr_decay_counter;
     if (_lr_decay_counter == _lr_decay_threshold)
     {
+        _learning_rate = _learning_rate / 2;
         _lr_decay_counter = 0;
-        _learning_rate = _learning_rate * 0.8; // !!!
-        Serial.println(_learning_rate * 100000);
     }
+    Serial.println(_learning_rate * 1000);
+}
+
+void Node::take_step()
+{
+    for (int i{0}; i < _weight_grads.size(); ++i) 
+    {
+        float avg_weight_grad = 0;
+        for (int j{0}; j < _weight_grads[i].size(); ++j)
+            avg_weight_grad += _weight_grads[i][j];
+        avg_weight_grad = avg_weight_grad / (float)_weight_grads[i].size();
+        _weights[i] = _weights[i] - (_learning_rate * avg_weight_grad);
+        _weight_grads[i].clear();
+    }
+    float avg_bias_grad = 0;
+    for (int i{0}; i < _bias_grads.size(); ++i)
+        avg_bias_grad += _bias_grads[i];
+    avg_bias_grad = avg_bias_grad / _bias_grads.size();
+    _bias = _bias - (_learning_rate * avg_bias_grad);
+    _bias_grads.clear();
+    this->update_learning_rate();
 }
 
 
@@ -54,13 +77,15 @@ StaticVec<float, MAX_NODES> Node::backwards_pass(const StaticVec<float, MAX_NODE
             full_weight_grad += output_grads[j] * part_weight_grad;
         }
         input_grads.push_back(full_input_grad);
-        _weights[i] = _weights[i] - (_learning_rate * full_weight_grad);
+        _weight_grads[i].push_back(full_weight_grad);
     }
     float bias_grad = _prev_output * (1 - _prev_output);
-    _bias = _bias - (_learning_rate * bias_grad);
-    this->update_learning_rate();
+    _bias_grads.push_back(bias_grad);
+    if (_bias_grads.size() == _bias_grads.max_size())
+        this->take_step();
     return input_grads;
 }
+
 
 Layer::Layer(const uint8_t& n_nodes, const uint8_t& n_inputs)
 {

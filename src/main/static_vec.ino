@@ -28,3 +28,5 @@ T& StaticVec<T, N>::operator[](int i)
   #endif
   return _arr[i];
 }
+
+

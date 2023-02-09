@@ -2,7 +2,7 @@
 #define STATIC_VEC
 
 #include <array>
-#include <stdint.h>
+#include <stdint.h> // remove
 
 constexpr int MAX_NODES = 3; // not clean
 

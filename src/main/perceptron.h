@@ -5,6 +5,7 @@
 #include "static_vec.h"
 
 constexpr uint8_t NUM_LAYERS = 3;
+constexpr uint BATCH_SIZE = 32;
 
 struct MinMaxValues
 // 'node' = z_sum, 'link' = input * weight
@@ -21,19 +22,17 @@ public:
     Node(){}; // bad practice?
     Node(const uint8_t& n_inputs);
     void init_weights();
-    void update_learning_rate();
     float forward_pass(const StaticVec<float, MAX_NODES>& inputs);
     StaticVec<float, MAX_NODES>
     backwards_pass(const StaticVec<float, MAX_NODES>& inputs,
                    const StaticVec<float, MAX_NODES>& output_grads);
     const float& get_output() const { return _prev_output; }
     const StaticVec<float, MAX_NODES>& get_weights() const { return _weights; }
-    const StaticVec<float, MAX_NODES>& get_inputs() const
-    {
-        return _prev_inputs;
-    }
+    const StaticVec<float, MAX_NODES>& get_inputs() const { return _prev_inputs; }
 
 private:
+    void update_learning_rate();
+    void take_step();
     float _learning_rate;
     uint _lr_decay_counter;
     uint _lr_decay_threshold;
@@ -41,6 +40,8 @@ private:
     float _prev_output;
     StaticVec<float, MAX_NODES> _prev_inputs;
     StaticVec<float, MAX_NODES> _weights;
+    StaticVec<StaticVec<float, BATCH_SIZE>, MAX_NODES> _weight_grads;
+    StaticVec<float, BATCH_SIZE> _bias_grads;
 };
 
 class Layer

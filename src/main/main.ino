@@ -13,7 +13,7 @@ String error = "";
 
 uint8_t rgbPins[]  = {7, 8, 9, 10, 11, 12};
 uint8_t addrPins[] = {17, 18, 19, 20};
-uint8_t clockPin   = 14;
+uint8_t instancePin   = 14;
 uint8_t latchPin   = 15;
 uint8_t oePin      = 16;
 
@@ -31,7 +31,7 @@ uint8_t row_addr_lines = 4; // matrix height inferred from this
 bool double_buffer = true; // improve animation smoothness for extra ram
 
 Adafruit_Protomatter matrix{matrix_width, colour_depth, matrix_num, rgbPins, 
-                            row_addr_lines, addrPins, clockPin, latchPin,
+                            row_addr_lines, addrPins, instancePin, latchPin,
                             oePin, double_buffer};
 
 constexpr uint8_t center = 15;
@@ -192,6 +192,24 @@ void update_draw_pulsars()
         }
 }
 
+void shuffle_data(StaticVec<StaticVec<float, MAX_NODES>, TRAIN_DATA_SZ>& X,
+StaticVec<float, TRAIN_DATA_SZ>& y)
+{
+    for (int i{0}; i < y.size(); ++i)
+    {
+        int random_index = rand() % y.size();
+        for (int j{0}; j < X[i].size(); ++j)
+        {
+            float temp = X[i][j];
+            X[i][j] = X[random_index][j];
+            X[random_index][j] = temp;
+        }
+        float temp = y[i];
+        y[i] = y[random_index];
+        y[random_index] = temp;
+    }
+}
+
 void check_buttons()
 {
     static uint delay = 0;
@@ -238,36 +256,36 @@ void loop() {
     static float lowest_cost = 100000; // !
     static float cost = 0;
     static int i = 0;
-    static uint clock = 0;
-    ++i;
-    if (i == 1000)
-    {
-        i = 0;
-        ++clock;
-        if (clock % 20 == 0)
+    static uint instance = 0;
+    // ++i;
+    // if (i == 1000)
+    // {
+    //     i = 0;
+        ++instance;
+        if (instance == TRAIN_DATA_SZ)
         {
+            instance = 0;
+            shuffle_data(x_train_matrix, y_train_vec);
             if (cost < lowest_cost)
                 lowest_cost = cost;
             if (show_loss)
             {
                 matrix.fillRect(51, 27, 14, 5, 0);
                 matrix.setCursor(51, 31);
-                matrix.print(lowest_cost);
+                matrix.print(cost);
             }
             cost = 0;
-            clock = 0;
         }
-        float instance = random(TRAIN_DATA_SZ); 
         mlp.forward_pass(x_train_matrix[instance], y_train_vec[instance]);
         update_pulsar_brightnesses(x_train_matrix[instance]);
         mlp.backwards_pass(x_train_matrix[instance], y_train_vec[instance]);
         cost += mlp.get_cost();
 
-        input1_node.init_pulse();
-        input2_node.init_pulse();
-    }
-
-    update_draw_pulsars();
+        // input1_node.init_pulse();
+        // input2_node.init_pulse();
+    // }
+    //
+    // update_draw_pulsars();
 
     matrix.show();
 
