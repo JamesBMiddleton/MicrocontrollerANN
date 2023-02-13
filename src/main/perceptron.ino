@@ -220,9 +220,9 @@ MinMaxValues get_abs_minmaxes_backward(const MLP& mlp)
     values.link_max = abs(temp.get_weight_grads()[0]);
     float grad_sum = 0;
     for (int i{0}; i < temp.get_weight_grads().size(); ++i)
-        grad_sum += temp.get_weight_grads()[i];
-    values.node_min = abs(grad_sum);
-    values.node_max = abs(grad_sum);
+        grad_sum += abs(temp.get_weight_grads()[i]);
+    values.node_min = grad_sum;
+    values.node_max = grad_sum;
 
     for (int i{0}; i < NUM_LAYERS; ++i)
     {
