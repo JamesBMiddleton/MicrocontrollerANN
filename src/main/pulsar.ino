@@ -26,8 +26,14 @@ void Pulsar::update()
 
 void Pulsar::set_max_brightness(const uint8_t& new_max)
 {
+#ifdef DEBUG
     if (_is_f_pulsing || _is_b_pulsing)
-        Serial.println("ERROR: max brightness set during pulse.");
+        error = "max brightness set during pulse.";
+    if (new_max < MIN_BRIGHTNESS)
+        error = "max brightness set below MIN_BRIGHTNESS.";
+    if (new_max > MAX_BRIGHTNESS)
+        error = "max brightness set above MAX_BRIGHTNESS.";
+#endif
     _max_brightness = new_max;
     _bright_step = (_max_brightness - _brightness) / _pulse_length;
 }

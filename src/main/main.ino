@@ -5,7 +5,7 @@
 #include "data.h"
 #include "static_vec.h"
 
-// #define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 String error = "";
@@ -162,8 +162,8 @@ void update_pulsar_brightness_forward(const StaticVec<float, MAX_NODES> inputs)
             node_matrix[i][j].set_max_brightness(brightness);
             for (int k{0}; k<link_matrix[i][j].size(); ++k)
             {
-                float link_strength = node.get_weights()[k] * node.get_inputs()[k];
-                brightness = minmax_scale(abs(link_strength), values.link_min, values.link_max, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
+                float link_strength = abs(node.get_weights()[k] * node.get_inputs()[k]);
+                brightness = minmax_scale(link_strength, values.link_min, values.link_max, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
                 link_matrix[i][j][k].set_max_brightness(brightness);
                 // Serial.println(link_matrix[i][j][k].get_max_brightness());
             }
@@ -185,12 +185,12 @@ void update_pulsar_brightness_backward()
             float grad_sum = 0;
             for (int k{0}; k<link_matrix[i][j].size(); ++k)
             {
-                float weight_grad = node.get_weight_grads()[k];
-                float brightness = minmax_scale(abs(weight_grad), values.link_min, values.link_max, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
+                float weight_grad = abs(node.get_weight_grads()[k]);
+                float brightness = minmax_scale(weight_grad, values.link_min, values.link_max, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
                 link_matrix[i][j][k].set_max_brightness(brightness);
                 grad_sum += weight_grad;
             }
-            float brightness = minmax_scale(abs(grad_sum), values.node_min, values.node_max, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
+            float brightness = minmax_scale(grad_sum, values.node_min, values.node_max, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
             node_matrix[i][j].set_max_brightness(brightness);
         }
     }
@@ -314,10 +314,11 @@ void loop() {
 
         if (instance % BATCH_SIZE == 0)
         {
-            print_cost(cost * 100); // *100 for more precision in viz
-            cost = 0;
+            delay(100);
             update_pulsar_brightness_backward();
             node_matrix[2][0].init_b_pulse();
+            print_cost(cost * 100); // *100 for more precision in viz
+            cost = 0;
         }
         else
         {
@@ -333,6 +334,9 @@ void loop() {
 
 #ifdef DEBUG
     if (error != "")
+    {
         Serial.println(error);
+        error = "";
+    }
 #endif
 }
