@@ -5,16 +5,16 @@ Visualising the training of an Artifical Neural Network (ANN) on a microcontroll
 __Neural network:__
 - Implemented from scratch.
 - Multi-layer perceptron with 2 inputs, 2 hidden layers and 1 output in a 2-3-3-1 arrangement.
-- Mini-batch gradient descent backpropagation
-- Sigmoid activation function
-- Learning rate scheduling
-- A sample regression problem for training the model was generated using [sklearn.datasets.make_regression()](https://scikit-learn.org/stable/modules/generated/sklearn.datasets.make_regression.html)
+- Mini-batch gradient descent backpropagation.
+- Sigmoid activation function.
+- Learning rate scheduling.
+- A sample regression problem for training the model was generated using [sklearn.datasets.make_regression()](https://scikit-learn.org/stable/modules/generated/sklearn.datasets.make_regression.html).
 
 __Visualisation details:__<br>
 - _forwards pass:_
   - Each forward pulse represents the path taken by a single instance of the dataset passing through the network.
   - The brightness of each node corresponds to the output value of that node.
-  - The brightness of each connection between nodes corresponds to the output from the previous node multiplied by its associated input weight
+  - The brightness of each connection between nodes corresponds to the output from the previous node multiplied by its associated input weight.
   - Brightnesses of nodes and connections scaled with each forward pass using min-max normalization to provide a better visualisation of the differences between different nodes and connections. 
   - 32 forward passes occur (the batch size) for each backwards pass.
 - _backwards pass:_
