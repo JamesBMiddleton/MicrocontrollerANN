@@ -245,7 +245,7 @@ void check_buttons()
     {
         if (digitalRead(btn_upPin) == LOW)
         {
-            matrix.fillRect(50, 26, 14, 5, 0);
+            matrix.fillRect(51, 27, 14, 5, 0);
             show_loss = !show_loss;
             delay = 100;
         }
@@ -275,7 +275,7 @@ void print_cost(const float& cost)
 // ----- Main setup and loop ------ //
 
 void setup() {
-
+    randomSeed(analogRead(0));
     Serial.begin(9600); 
 
     setup_matrix_library();
@@ -284,8 +284,8 @@ void setup() {
 
     x_train_matrix = populate_x_train(raw_x_train);
     y_train_vec = populate_y_train(raw_y_train);
+    shuffle_data(x_train_matrix, y_train_vec);
 
-    randomSeed(analogRead(0));
     mlp.init_weights();
     construct_pulsar_matrices();
 }
@@ -296,7 +296,7 @@ void loop() {
     static float cost = 0;
     static uint instance = 0;
     static int i = 0;
-    if (i++ == 1000)
+    if (i++ == 1000) // time for a wave to travel from input to output
     {
         i = 0;
         ++instance;
