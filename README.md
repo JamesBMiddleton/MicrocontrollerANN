@@ -1,6 +1,9 @@
 # MicrocontrollerANN
 Visualising the training of an Artifical Neural Network (ANN) on a microcontroller using an LED matrix.
 
+<meta http-equiv="cache-control" content="no-cache" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="-1" />
 
   <picture>
     <source media="(min-width:650px)" srcset="https://user-images.githubusercontent.com/73485794/219461093-48db8680-01a6-4c4e-b943-4023e8bdf0e1.gif" width="49%">
