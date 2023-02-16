@@ -1,6 +1,11 @@
 # MicrocontrollerANN
 
+![Untitled7](https://user-images.githubusercontent.com/73485794/219456615-4837c9aa-6c16-4c9a-bf55-155be06a4e50.gif)
+![close_samesize](https://user-images.githubusercontent.com/73485794/219461093-48db8680-01a6-4c4e-b943-4023e8bdf0e1.gif)
+
+
 Visualising the training of an Artifical Neural Network (ANN) on a microcontroller using an LED matrix.
+
 
 __Neural network:__
 - Implemented from scratch.
