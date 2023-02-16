@@ -5,7 +5,7 @@
 #include "data.h"
 #include "static_vec.h"
 
-#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 String error = "";
@@ -273,9 +273,8 @@ void print_cost(const float& cost)
 
 
 // ----- Main setup and loop ------ //
-
 void setup() {
-    randomSeed(analogRead(0));
+    randomSeed(analogRead(0) + analogRead(1) + analogRead(2) + analogRead(3) + analogRead(4)); // lots of random states
     Serial.begin(9600); 
 
     setup_matrix_library();
