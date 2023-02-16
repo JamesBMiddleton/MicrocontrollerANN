@@ -1,7 +1,7 @@
 # MicrocontrollerANN
 Visualising the training of an Artifical Neural Network (ANN) on a microcontroller using an LED matrix.
 
-<p align="middle" border="0" padding="0" margin="0">
+
   <picture>
     <source media="(max-width:650px)" srcset="https://user-images.githubusercontent.com/73485794/219461093-48db8680-01a6-4c4e-b943-4023e8bdf0e1.gif" sizes="100%" width="100%">
         <source media="(min-width:650px)" srcset="https://user-images.githubusercontent.com/73485794/219461093-48db8680-01a6-4c4e-b943-4023e8bdf0e1.gif" sizes="100%" width="49%">
@@ -13,6 +13,7 @@ Visualising the training of an Artifical Neural Network (ANN) on a microcontroll
         <source media="(min-width:650px)" srcset="https://user-images.githubusercontent.com/73485794/219456615-4837c9aa-6c16-4c9a-bf55-155be06a4e50.gif" sizes="100%" width="49%">
       <img src="https://user-images.githubusercontent.com/73485794/219456615-4837c9aa-6c16-4c9a-bf55-155be06a4e50.gif" alt="1">
   </picture>
+ <p align="middle" border="0" padding="0" margin="0">
 </p>
 
 
