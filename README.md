@@ -2,15 +2,13 @@
 Visualising the training of an Artifical Neural Network (ANN) on a microcontroller using an LED matrix.
 
 <picture>
-  <source media="(min-width:650px)" srcset="https://user-images.githubusercontent.com/73485794/219461093-48db8680-01a6-4c4e-b943-4023e8bdf0e1.gif" width="49%">
-  <source media="(max-width:650px)" srcset="https://user-images.githubusercontent.com/73485794/219461093-48db8680-01a6-4c4e-b943-4023e8bdf0e1.gif" width="100%">
-  <img src="https://user-images.githubusercontent.com/73485794/219461093-48db8680-01a6-4c4e-b943-4023e8bdf0e1.gif" alt="1">
+  <source media="(max-width:650px)" srcset="https://user-images.githubusercontent.com/73485794/219461093-48db8680-01a6-4c4e-b943-4023e8bdf0e1.gif?cache=none" width="100%">
+  <img src="https://user-images.githubusercontent.com/73485794/219461093-48db8680-01a6-4c4e-b943-4023e8bdf0e1.gif?cache=none" alt="1" width="49%">
 </picture>
 
 <picture>
-   <source media="(min-width:650px)" srcset="https://user-images.githubusercontent.com/73485794/219456615-4837c9aa-6c16-4c9a-bf55-155be06a4e50.gif" width="49%">
-   <source media="(max-width:650px)" srcset="https://user-images.githubusercontent.com/73485794/219456615-4837c9aa-6c16-4c9a-bf55-155be06a4e50.gif" width="100%">
-   <img src="https://user-images.githubusercontent.com/73485794/219456615-4837c9aa-6c16-4c9a-bf55-155be06a4e50.gif" alt="1">
+   <source media="(max-width:650px)" srcset="https://user-images.githubusercontent.com/73485794/219456615-4837c9aa-6c16-4c9a-bf55-155be06a4e50.gif?cache=none" width="100%">
+   <img src="https://user-images.githubusercontent.com/73485794/219456615-4837c9aa-6c16-4c9a-bf55-155be06a4e50.gif?cache=none" alt="1" width="49%">
 </picture>
 
 __Neural network:__
